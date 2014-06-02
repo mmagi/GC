@@ -1,6 +1,38 @@
 CACHE MANIFEST
 # c27cdb80d31bf60b41144c1462a674cc389525f3
 index.html
+# 72fd32da105198dfc7d0958826b37ba1f789e564
+resources/data/card_not_be_selected.png
+# 23a8bfe2e64ba9386fab37ca8aaf71204bfe4648
+resources/data/book_silhouette1.png
+# 9002504aeb03ff0359b088f52837d9c5481b8ea4
+resources/data/book_silhouette2.png
+# e289a5393abe1eca0b0ab1d9df99e62a491a5225
+resources/data/book_silhouette3.png
+# f81af09112a4d1174bb85e38d7872a3380510a24
+resources/data/book_silhouette4.png
+# b6bb5157a9ead963c18d96ba3adbaac554fcfe1c
+resources/data/book_silhouette6.png
+# 7ee935c62907d2578bfe2de6db1d4cfd766092bb
+resources/data/book_silhouette7.png
+# 6712fdba1f166e81bf648e8e603ba016393b73b5
+resources/data/book_silhouette8.png
+# a6c9224a29057944db74d8ae8b114f5add76dbac
+resources/data/book_silhouette9.png
+# a3b62d2dee5af8d304d964a57ccc2d771847169b
+resources/data/book_silhouette10.png
+# b57a611697b9376caf86471577612ba9f7b117ed
+resources/data/book_silhouette11.png
+# 59f426b60a0908776277dce3db4dcdc006199794
+resources/data/book_silhouette12.png
+# 4a218b790a295eb170ed1d0ea6506e7a21548f72
+resources/data/book_silhouette13.png
+# ed4e104df47bc4697259da4e5599906b04823d13
+resources/data/book_silhouette14.png
+# f91cd82104369c250bf7408c2be055d1e0b9f069
+resources/data/book_silhouette15.png
+# 5a6dfee30e7a3e640d3ae4951f9aa42938919156
+resources/data/card_thu99999.png
 
 
 FALLBACK:
