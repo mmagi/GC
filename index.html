@@ -4,48 +4,75 @@
     <meta charset="UTF-8">
     <title>抖M魔物图鉴</title>
     <style type="text/css">
-         /**
-         * Example of an initial loading indicator.
-         * It is recommended to keep this as minimal as possible to provide instant feedback
-         * while other resources are still being loaded for the first time
-         */
+        /**
+        * Example of an initial loading indicator.
+        * It is recommended to keep this as minimal as possible to provide instant feedback
+        * while other resources are still being loaded for the first time
+        */
         html, body {
             height: 100%;
-            background-color: #1985D0
+            background-color: #0e0e0e;
+            background: linear-gradient(135deg,  #7d7e7d 0%,#0e0e0e 100%); /* W3C */
         }
 
+        @media screen and (orientation:landscape) {
+            #ext-viewport{
+                max-width: 400px;
+                margin: 0 auto !important;
+            }
+            body:before{
+                content: "横屏截图的你们够�?>_<\A 魔物狩猎者国服图鉴\A Presented by M ";
+                white-space:pre;
+                color:#ffffff;
+                text-align: right;
+                position: absolute;
+                right: 0;
+                bottom: 0;
+            }
+        }
         #appLoadingIndicator {
             position: absolute;
             top: 50%;
-            margin-top: -15px;
             text-align: center;
             width: 100%;
             height: 30px;
-            -webkit-animation-name: appLoadingIndicator;
-            -webkit-animation-duration: 0.5s;
-            -webkit-animation-iteration-count: infinite;
-            -webkit-animation-direction: linear;
         }
 
-        #appLoadingIndicator > * {
-            background-color: #FFFFFF;
-            display: inline-block;
-            height: 30px;
-            -webkit-border-radius: 15px;
-            margin: 0 5px;
+        #appLoadingIndicator > div {
             width: 30px;
-            opacity: 0.8;
+            height: 30px;
+            background-color: #FFF;
+
+            border-radius: 100%;
+            display: inline-block;
+            -webkit-animation: bouncedelay 1.4s infinite ease-in-out;
+            animation: bouncedelay 1.4s infinite ease-in-out;
+
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both;
         }
 
-        @-webkit-keyframes appLoadingIndicator{
-            0% {
-                opacity: 0.8
+        #appLoadingIndicator .b1 {
+            -webkit-animation-delay: -0.32s;
+            animation-delay: -0.32s;
+        }
+
+        #appLoadingIndicator .b2 {
+            -webkit-animation-delay: -0.16s;
+            animation-delay: -0.16s;
+        }
+        @-webkit-keyframes bouncedelay {
+            0%, 80%, 100% { -webkit-transform: scale(0.0) }
+            40% { -webkit-transform: scale(1.0) }
+        }
+        @keyframes bouncedelay {
+            0%, 80%, 100% {
+                transform: scale(0.0);
+                -webkit-transform: scale(0.0);
             }
-            50% {
-                opacity: 0
-            }
-            100% {
-                opacity: 0.8
+            40% {
+                transform: scale(1.0);
+                -webkit-transform: scale(1.0);
             }
         }
     </style>
