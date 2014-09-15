@@ -1,6 +1,8 @@
 CACHE MANIFEST
-# 2265c1b1c4a3af3c523626fad4eb82643ec33678
+# 877ba0307113edca870d059fc6adbab719f4cf3e
 index.html
+# 288e775b4c05f767c3a90648b02bfff60ca5c84c
+resources/data/rare_star.png
 # 72fd32da105198dfc7d0958826b37ba1f789e564
 resources/data/card_not_be_selected.png
 # 23a8bfe2e64ba9386fab37ca8aaf71204bfe4648
@@ -36,6 +38,8 @@ resources/data/card_thu99999.png
 
 
 FALLBACK:
+index.html index.html
+resources/data/card/ resources/data/card_thu99999.png
 
 
 NETWORK:
