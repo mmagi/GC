@@ -411,7 +411,7 @@ var ABI = (function () {
                     msg: this.name + "使" + to.name + "的MP归零"
                 };
             },
-            order: 2
+            enOrder: 2
         },
         38: {//全防
             __proto__: commonAbi,
@@ -421,7 +421,7 @@ var ABI = (function () {
                     msg: this.name + "使" + from.name + "的属性防御力上升了"
                 };
             },
-            order: 4
+            enOrder: 4
         },
         40: {//反击
             __proto__: commonAbi,
@@ -455,7 +455,7 @@ var ABI = (function () {
                     msg: this.name + "使" + to.name + "的进入"+this.power2+"%的混乱状态"
                 };
             },
-            order: 1
+            enOrder: 1
         },
         //血斩
         43: {
@@ -485,6 +485,7 @@ var ABI = (function () {
         var data = _db.skill[idx];
         ABI[idx] = {
             __proto__: abiE[data[5]],
+            id:idx,
             name:data[0],
             mp: data[2],
             power: data[3],
@@ -690,8 +691,8 @@ var entranceCast = function () {
     var abiL = stage.left[0].selectEntranceAbi(stage.right[0]);
     var abiR = stage.right[0].selectEntranceAbi(stage.left[0]);
     if (!!abiL && !!abiR) {
-        if (abiL.order > abiR.order) abiR = null;
-        else if (abiL.order < abiR.order) abiL = null;
+        if (abiL.enOrder > abiR.enOrder) abiR = null;
+        else if (abiL.enOrder < abiR.enOrder) abiL = null;
         else if (stage.right[0].actSpd > stage.left[0].actSpd) abiL = null;
         else abiR = null;
     }
@@ -723,8 +724,8 @@ var entranceApply = function () {
     abi = stage.casting.abi;
     if (!!abi.getOtherCase) {
         var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
-        newstage.casting.abi = newabi;
         var newstage = stage.fork(newabi.prop);
+        newstage.casting.abi = newabi;
         stage.stages.push(newstage);
         stage = stage.fork(100-newabi.prop);
     }
@@ -814,7 +815,7 @@ var fightCast = function () {
         };
         newstage.log("混乱生效");
         stage.stages.push(newstage);
-        stage = stage.fork(1 - atk.perConfuse);
+        stage = stage.fork(100 - atk.perConfuse);
         stage.log("混乱未生效");
     }
     stage.casting = {
