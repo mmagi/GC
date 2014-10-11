@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html manifest="" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>抖M魔物图鉴</title>
+    <script type="text/javascript" src="db.js"></script>
+    <script type="text/javascript" src="emulate.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+    <script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="//davidstutz.github.io/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/css/bootstrap-multiselect.css">
+    <script type="text/javascript" src="canvasjs.min.js"></script>
+    <style>
+        li.log{
+            list-style-type: none;
+        }
+        li.branch{
+            list-style-type: circle;
+        }
+        li.end{
+            list-style-type: square;
+        }
+    </style>
+</head>
+<body>
+<h3>抖M魔物模拟器测试版v20141011</h3>
+<div id="leftdeck" style="float:left;">
+
+</div>
+<div id="rightdeck" style="float:right;">
+
+</div>
+<div style="clear: both;margin: 0 auto;"><button id="bt1" onclick="gofight(false)">模拟</button>
+    <button  id="bt2" onclick="gofight(true)">交换左右模拟</button>
+</div>
+
+<div id="chartContainer" style="height: 300px; width: 100%;">
+</div>
+<ul id="logContainer">
+</ul>
+<script type="text/javascript">
+
+    //initial value of dataPoints
+    var dps = [
+        {label: "胜10", y: 0},
+        {label: "胜9", y: 0},
+        {label: "胜8", y: 0},
+        {label: "胜7", y: 0},
+        {label: "胜6", y: 0},
+        {label: "胜5", y: 0},
+        {label: "胜4", y: 0},
+        {label: "胜3", y: 0},
+        {label: "胜2", y: 0},
+        {label: "胜1", y: 0},
+        {label: "胜0", y: 0},
+        {label: "负1", y: 0},
+        {label: "负2", y: 0},
+        {label: "负3", y: 0},
+        {label: "负4", y: 0},
+        {label: "负5", y: 0},
+        {label: "负6", y: 0},
+        {label: "负7", y: 0},
+        {label: "负8", y: 0},
+        {label: "负9", y: 0},
+        {label: "负10", y: 0},
+        {label: "未知", y: 100}
+    ];
+
+    var chart = new CanvasJS.Chart("chartContainer",{
+        title: {
+            text: "胜率"
+        },
+        axisY: {
+            suffix: " %"
+        },
+        legend :{
+            verticalAlign: 'bottom',
+            horizontalAlign: "center"
+        },
+        data: [
+            {
+                type: "column",
+                bevelEnabled: true,
+                indexLabel: "{y} %",
+                dataPoints: dps
+            }
+        ]
+    });
+
+
+    chart.render();
+    var cards=[{label:"无",value:0}];
+    for (var idx in _db.cardStatus){
+        if (idx<100000 && _db.cardStatus[idx][7]==2) cards.push({label:_db.cardStatus[idx][0],value:idx});
+    }
+    var types=[];
+    for (var idx in _db.type){
+        types.push({label:_db.type[idx][0],value:idx});
+    }
+    function caculate(lv1,lv60,rate){
+        var a = lv1+(lv60-lv1)*69/59;
+        return parseInt(rate*parseInt(a))+parseInt(0.2*a);
+
+    }
+    function card(p){
+        var $body = $("<div>").appendTo(p)
+        var $card = $("<select>").appendTo($body);
+        $card.multiselect('dataprovider',cards);
+        $card.multiselect('setOptions', {enableFiltering: true,maxHeight: 100});
+        $card.multiselect('rebuild');
+        $card.change(function(){
+            var data=_db.cardStatus[$card.val()];
+            var abi=[];
+            if (!!data){
+                if (data[20]) abi.push({label:_db.skill[data[21]][0],value:data[21]});
+                if (data[22]) abi.push({label:_db.skill[data[23]][0],value:data[23]});
+                if (data[24]) abi.push({label:_db.skill[data[25]][0],value:data[25]});
+                if (data[26]) abi.push({label:_db.skill[data[27]][0],value:data[27]});
+                if (data[28]) abi.push({label:_db.skill[data[29]][0],value:data[29]});
+                if (data[30]) abi.push({label:_db.skill[data[31]][0],value:data[31]});
+            }
+            $abi.multiselect('dataprovider',abi);
+        });
+        var $type = $("<select>").appendTo($body);
+        $type.multiselect('dataprovider',types);
+        var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
+        $abi.multiselect('dataprovider',[]);
+        return function(){
+            var data=_db.cardStatus[$card.val()];
+            var tdata=_db.type[$type.val()];
+            if (!data) return null;
+            return {
+                name:data[0],
+                element:data[4],
+                maxHp:caculate(data[8],data[14],tdata[1]),
+                maxMp:caculate(data[9],data[15],tdata[2]),
+                atk:caculate(data[10],data[16],tdata[3]),
+                def:caculate(data[11],data[17],tdata[4]),
+                spd:caculate(data[12],data[18],tdata[5]),
+                itl:caculate(data[13],data[19],tdata[6]),
+                abi:$abi.val()
+            };
+        }
+    }
+    var p = $("#leftdeck");
+    var left=[];
+    for (var i = 0;i<10;i++){
+        left.push(card(p));
+    }
+    p = $("#rightdeck");
+    var right=[];
+    for (var i = 0;i<10;i++){
+        right.push(card(p));
+    }
+    function gofight(swap){
+        $("#bt1").attr("disabled", true);
+        $("#bt2").attr("disabled", true);
+        var l=[];
+        var r=[];
+        for (var i = 0;i<10;i++){
+            var ret = left[i]();
+            if (ret) l.push(ret);
+        }
+        for (var i = 0;i<10;i++){
+            var ret = right[i]();
+            if (ret) r.push(ret);
+        }
+        if(swap) analyse(r,l);
+        else analyse(l,r);
+    }
+</script>
+</body>
+</html>
