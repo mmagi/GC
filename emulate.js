@@ -347,6 +347,7 @@ var ABI = (function () {
             getOtherCase:function (from, to) {
                 return {
                     __proto__:this,
+                    getOtherCase:false,
                     apply: function (from, to, ref) {
                         var n = parseInt(
                                 from.atk * (from.perAtk + 50) / 100
@@ -578,6 +579,7 @@ var cardP = {
                     __proto__: multiAbi,
                     othercase: {
                         __proto__: bestAbi,
+                        getOtherCase:false,
                         prop: 1 - multiAbi.prop
                     },
                     getOtherCase: function (from,to) {
