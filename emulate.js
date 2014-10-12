@@ -616,7 +616,7 @@ var cardP = {
         if (this.perConfuse > 0 || !tabi.isDamageAtk) return false;
         for (var idx in this.Abis) {
             var abi = this.Abis[idx];
-            if (abi.isAtkBack) return abi;
+            if (abi.isAtkBack && abi.mp <= this._mp) return abi;
         }
         return false;
     },
