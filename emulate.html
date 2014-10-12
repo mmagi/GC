@@ -10,10 +10,10 @@
     <script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="//davidstutz.github.io/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+    <script src="multiselect.js"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141012b4"></script>
+    <script type="text/javascript" src="emulate.js?20141012b5"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-<h3>抖M魔物模拟器测试版v20141012b4</h3>
+<h3>抖M魔物模拟器测试版v20141012b5</h3>
 <div id="leftdeck" style="float:left;">
 
 </div>
@@ -119,12 +119,12 @@
             var data=_db.cardStatus[$card.val()];
             var abi=[];
             if (!!data){
-                if (data[20]) abi.push({label:_db.skill[data[21]][0],value:data[21]});
-                if (data[22]) abi.push({label:_db.skill[data[23]][0],value:data[23]});
-                if (data[24]) abi.push({label:_db.skill[data[25]][0],value:data[25]});
-                if (data[26]) abi.push({label:_db.skill[data[27]][0],value:data[27]});
-                if (data[28]) abi.push({label:_db.skill[data[29]][0],value:data[29]});
-                if (data[30]) abi.push({label:_db.skill[data[31]][0],value:data[31]});
+                if (data[20]) abi.push({label:_db.skill[data[21]][0],detail:_db.skill[data[21]][1],value:data[21]});
+                if (data[22]) abi.push({label:_db.skill[data[23]][0],detail:_db.skill[data[23]][1],value:data[23]});
+                if (data[24]) abi.push({label:_db.skill[data[25]][0],detail:_db.skill[data[25]][1],value:data[25]});
+                if (data[26]) abi.push({label:_db.skill[data[27]][0],detail:_db.skill[data[27]][1],value:data[27]});
+                if (data[28]) abi.push({label:_db.skill[data[29]][0],detail:_db.skill[data[29]][1],value:data[29]});
+                if (data[30]) abi.push({label:_db.skill[data[31]][0],detail:_db.skill[data[31]][1],value:data[31]});
             }
             $abi.multiselect('dataprovider',abi);
         });
