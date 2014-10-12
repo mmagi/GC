@@ -2,7 +2,7 @@
 <html manifest="" lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>抖M魔物图鉴</title>
+    <title>抖M魔物战斗模拟器</title>
     <script type="text/javascript" src="db.js"></script>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
@@ -13,7 +13,7 @@
     <script src="//davidstutz.github.io/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141011v2"></script>
+    <script type="text/javascript" src="emulate.js?20141012b1"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -27,15 +27,19 @@
     </style>
 </head>
 <body>
-<h3>抖M魔物模拟器测试版v20141011v2</h3>
+<h3>抖M魔物模拟器测试版v20141012b1</h3>
 <div id="leftdeck" style="float:left;">
 
 </div>
 <div id="rightdeck" style="float:right;">
 
 </div>
-<div style="clear: both;margin: 0 auto;"><button id="bt1" onclick="gofight(false)">模拟</button>
-    <button  id="bt2" onclick="gofight(true)">交换左右模拟</button>
+<div style="clear: both;width: 100%;text-align: center;">
+    <div style="margin: 0 auto;">
+        <button id="bt1" class="btn btn-primary" onclick="gofight(false)">模拟</button>
+        <button  id="bt2" class="btn" onclick="gofight(true)">交换左右模拟</button>
+        <button  id="btc" class="btn" onclick="window.cancelRun = true">取消模拟</button>
+    </div>
 </div>
 
 <div id="chartContainer" style="height: 300px; width: 100%;">
@@ -67,12 +71,11 @@
         {label: "负8", y: 0},
         {label: "负9", y: 0},
         {label: "负10", y: 0},
-        {label: "未知", y: 100}
     ];
 
     var chart = new CanvasJS.Chart("chartContainer",{
         title: {
-            text: "胜率"
+            text: "胜率分布"
         },
         axisY: {
             suffix: " %"
@@ -146,6 +149,7 @@
             };
         }
     }
+    $("#btc").hide();
     var p = $("#leftdeck");
     var left=[];
     for (var i = 0;i<10;i++){
@@ -157,8 +161,10 @@
         right.push(card(p));
     }
     function gofight(swap){
+        window.cancelRun = false;
         $("#bt1").attr("disabled", true);
         $("#bt2").attr("disabled", true);
+        $("#btc").show();
         var l=[];
         var r=[];
         for (var i = 0;i<10;i++){
