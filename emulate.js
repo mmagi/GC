@@ -633,7 +633,7 @@ var cardP = {
                 var score = abi.score(this, tcard)
                 if (score > bestScore) {
                     bestAbi = abi;
-                    bestOrder = abi.enOrder;
+                    bestScore = score;
                 }
             }
         }
