@@ -10,10 +10,11 @@
     <script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="multiselect.js"></script>
+    <script src="//johnny.github.io/jquery-sortable/js/jquery-sortable-min.js"></script>
+    <script src="multiselect.js?2"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141012b5"></script>
+    <script type="text/javascript" src="emulate.js?20141012b6"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -24,16 +25,40 @@
         li.end{
             list-style-type: square;
         }
+        .deck>li{
+            display: block;
+            list-style-type: none;
+            padding: 2px 0;
+            margin: 0;;
+        }
+        body.dragging, body.dragging * {
+             cursor: move !important;
+         }
+
+        .dragged {
+            position: absolute;
+            opacity: 0.5;
+            z-index: 2000;
+        }
+        .deck{
+            min-width: 400px;;
+            margin: 0;
+            padding: 0;;
+        }
+        .deck>li.placeholder {
+            position: relative;
+            /** More li styles **/
+        }
+        .deck>li.placeholder:before{
+            position: absolute;
+            /** Define arrowhead **/
+        }
     </style>
 </head>
 <body>
-<h3>抖M魔物模拟器测试版v20141012b5</h3>
-<div id="leftdeck" style="float:left;">
-
-</div>
-<div id="rightdeck" style="float:right;">
-
-</div>
+<h3 style="text-align: center">抖M魔物模拟器测试版v20141012b6</h3>
+<ol id="leftdeck"  class="deck" style="float:left;"></ol>
+<ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
     <div style="margin: 0 auto;">
         <button id="bt1" class="btn btn-primary" onclick="gofight(false)">模拟</button>
@@ -110,10 +135,11 @@
 
     }
     function card(p){
-        var $body = $("<div>").appendTo(p)
+        var $body = $("<li>").appendTo(p)
+        $body.append('<button type="button" class="btn btn-default btn-sort"><span class="glyphicon glyphicon-resize-vertical"></span></button>');
         var $card = $("<select>").appendTo($body);
+        $card.multiselect({enableFiltering: true,maxHeight: 500});
         $card.multiselect('dataprovider',cards);
-        $card.multiselect('setOptions', {enableFiltering: true,maxHeight: 100});
         $card.multiselect('rebuild');
         $card.change(function(){
             var data=_db.cardStatus[$card.val()];
@@ -132,7 +158,7 @@
         $type.multiselect('dataprovider',types);
         var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
         $abi.multiselect('dataprovider',[]);
-        return function(){
+        $body.data({getCard:function(){
             var data=_db.cardStatus[$card.val()];
             var tdata=_db.type[$type.val()];
             if (!data) return null;
@@ -147,19 +173,19 @@
                 itl:caculate(data[13],data[19],tdata[6]),
                 abi:$abi.val()
             };
-        }
+        }});
     }
     $("#btc").hide();
     var p = $("#leftdeck");
-    var left=[];
     for (var i = 0;i<10;i++){
-        left.push(card(p));
+        card(p);
     }
+    p.sortable({handle:'button.btn-sort'});
     p = $("#rightdeck");
-    var right=[];
     for (var i = 0;i<10;i++){
-        right.push(card(p));
+        card(p);
     }
+    p.sortable({handle:'button.btn-sort'});
     function gofight(swap){
         window.cancelRun = false;
         $("#bt1").attr("disabled", true);
@@ -167,14 +193,14 @@
         $("#btc").show();
         var l=[];
         var r=[];
-        for (var i = 0;i<10;i++){
-            var ret = left[i]();
+        $("#leftdeck>li").each(function(idx,elemnt){
+            var ret = $(elemnt).data().getCard();
             if (ret) l.push(ret);
-        }
-        for (var i = 0;i<10;i++){
-            var ret = right[i]();
+        });
+        $("#rightdeck>li").each(function(idx,elemnt){
+            var ret = $(elemnt).data().getCard();
             if (ret) r.push(ret);
-        }
+        });
         if(swap) analyse(r,l);
         else analyse(l,r);
     }
