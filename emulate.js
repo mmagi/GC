@@ -376,7 +376,8 @@ var ABI = (function () {
                 var n = parseInt((damageGood * this.power2 + damageBad * (100 - this.power2))/100);
                 return parseInt(n-this.mp/50);
             },
-            isNormalAbi:true
+            isNormalAbi:true,
+            isPhysicAtk:false
         },
         35: {//天界
             __proto__: commonAbi,
@@ -483,8 +484,13 @@ var ABI = (function () {
                 );
                 if (n < 1) n = 1;
                 if (n > to._hp) n = to._hp;
-                return parseInt(n-this.mp/50);
-            }
+                var rank = n-this.power2;
+                if (from._hp<this.power2){
+                    return 0;
+                }else if (rank<1) rank = 1;
+                return rank;
+            },
+            isPhysicAtk:false
         }
 
     };
