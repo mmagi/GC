@@ -379,6 +379,7 @@ var ABI = (function () {
                 return parseInt(n-this.mp/50);
             },
             isNormalAbi:true,
+            isDamageAtk:true,
             isPhysicAtk:false
         },
         35: {//天界
