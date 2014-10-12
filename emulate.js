@@ -375,6 +375,7 @@ var ABI = (function () {
                 var damageGood = from.atk * (from.perAtk + this.power) / 100;
                 var damageBad = from.atk * (from.perAtk + 50) / 100;
                 var n = parseInt((damageGood * this.power2 + damageBad * (100 - this.power2))/100);
+                if (n> to._hp) n = to._hp;
                 return parseInt(n-this.mp/50);
             },
             isNormalAbi:true,
@@ -978,7 +979,7 @@ function analyse(left, right) {
     ];
     stageP.stages = stages;
     function nextRun() {
-        var stage = stages.pop();
+        var stage = stages.shift();
         if (!stage){
             chart.options.title.text="胜率分析完毕";
             $("#bt1").removeAttr("disabled");
