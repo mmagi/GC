@@ -314,13 +314,23 @@ var ABI = (function () {
         },
         27: {//背水
             __proto__: commonAbi,
+            getOtherCase: function (from, to) {
+                return {
+                    __proto__:this,
+                    getOtherCase:false,
+                    apply:function(from, to, ref) {
+                        return  {
+                            msg: from.name+"使用"+this.name +"失败"
+                        };
+                    },
+                    prop:100-this.power
+                }
+            },
             apply: function (from, to, ref) {
-                var n = this.mp+from._mp;
-                to.setHp(to._hp - n);
-                from._hp=0;
-                from._mp=0;
+                from._hp = 1;
+                from._mp = 0;
                 return  {
-                    msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
+                    msg: this.name + "使" + from.name + "承受一击打，当前1HP、0MP"
                 };
             },
             exOrder: 3,
@@ -629,26 +639,32 @@ var stageP = {
         return this.casting.to ? this.left[0] : this.right[0];//t=left,f=right
     },
     fork: function (prop) {
-        var sublog = $("<ul>").hide();
         var stage = {
             __proto__: this,
             left: this.left.slice(0),
-            right: this.right.slice(0),
-            logs: {
-                msg: sublog,
-                sub: []
-            }
+            right: this.right.slice(0)
         };
         stage.left[0] = {__proto__: this.left[0]};
         stage.right[0] = {__proto__: this.right[0]};
-        this.logs.sub.push(stage.logs);
         var p = this.prop * prop;
         stage.prop = p / 100;
-        $("<li class='branch'>分支选择几率" + prop + "%，累计约" + stage.prop + "%</li>").appendTo(this.logs.msg).click(function (){sublog.toggle()});
-        sublog.appendTo(this.logs.msg);
+        if (!this.logs || p<0.1) {
+            if (this.logs) $("<li class='end'>分支选择几率" + prop + "%，累计约" + stage.prop + "%，分支过多，后续日将关闭</li>").appendTo(this.logs.msg);
+            this.logs = false;
+        }else{
+            var sublog = $("<ul>").hide();
+            stage.logs =  {
+                msg: sublog,
+                sub: []
+            };
+            $("<li class='branch'>分支选择几率" + prop + "%，累计约" + stage.prop + "%</li>").appendTo(this.logs.msg).click(function (){sublog.toggle()});
+            sublog.appendTo(this.logs.msg);
+            this.logs.sub.push(stage.logs);
+        }
         return stage;
     },
     log: function (text,cls) {
+        if (!this.logs) return;
         if (!cls) this.logs.msg.append("<li class='log'>"+text+"</li>");
         else this.logs.msg.append("<li class='"+cls+"'>"+text+"</li>");
     }
@@ -726,7 +742,7 @@ var entranceApply = function () {
         var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
         var newstage = stage.fork(newabi.prop);
         newstage.casting.abi = newabi;
-        stage.stages.push(newstage);
+//        stage.stages.push(newstage);
         stage = stage.fork(100-newabi.prop);
     }
     ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
@@ -762,7 +778,13 @@ var entranceApply = function () {
             stage.nextRound = swapCard;
         }
     }
-    return stage;
+    if(newstage && stage.prop<newstage.prop){
+        stage.stages.push(stage);
+        return newstage;
+    }else {
+        if (newstage) stage.stages.push(newstage);
+        return stage;
+    }
 };
 var exitApply = function () {
     var stage = this;
@@ -775,7 +797,6 @@ var exitApply = function () {
             __proto__: this.casting,
             abi: newabi
         };
-        stage.stages.push(newstage);
         stage = stage.fork(100-newabi.prop);
     }
     ret = abi.apply(stage.get_from(), stage.get_to());
@@ -785,7 +806,13 @@ var exitApply = function () {
     } else {
         stage.nextRound = swapCard;
     }
-    return stage;
+    if(newstage && stage.prop<newstage.prop){
+        stage.stages.push(stage);
+        return newstage;
+    }else {
+        if (newstage) stage.stages.push(newstage);
+        return stage;
+    }
 };
 var fightCast = function () {
     var stage = this;
@@ -814,7 +841,6 @@ var fightCast = function () {
             abi: abi
         };
         newstage.log("混乱生效");
-        stage.stages.push(newstage);
         stage = stage.fork(100 - atk.perConfuse);
         stage.log("混乱未生效");
     }
@@ -823,7 +849,13 @@ var fightCast = function () {
         to: !dir,
         abi: abi
     };
-    return stage;
+    if(newstage && stage.prop<newstage.prop){
+        stage.stages.push(stage);
+        return newstage;
+    }else {
+        if (newstage) stage.stages.push(newstage);
+        return stage;
+    }
 };
 var fightApply = function () {
     var stage = this;
@@ -836,14 +868,14 @@ var fightApply = function () {
         newstage.log(ret.msg);
         abiBack.apply(newstage.get_from(), newstage.get_to());
         newstage.nextRound = fightCast;
-        stage.stages.push(newstage);
+//        stage.stages.push(newstage);
         stage = stage.fork(100 - abiBack.prop);
     }
     if (!!abi.getOtherCase) {
         var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
-        var newstage = stage.fork( newabi.prop);
-        newstage.casting.abi = newabi
-        stage.stages.push(newstage);
+        var newstage2 = stage.fork( newabi.prop);
+        newstage2.casting.abi = newabi
+//        stage.stages.push(newstage2);
         stage = stage.fork(100 - newabi.prop);
     }
     ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
@@ -879,7 +911,26 @@ var fightApply = function () {
             stage.nextRound = swapCard;
         }
     }
-    return stage;
+    if (newstage && stage.prop<newstage.prop){
+        if(newstage2 && newstage.prop<newstage2.prop){
+            stage.stages.push(stage);
+            stage.stages.push(newstage);
+            return newstage2;
+        }else{
+            stage.stages.push(stage);
+            if (newstage2) stage.stages.push(newstage2);
+            return newstage;
+        }
+    }else{
+        if (newstage) stage.stages.push(newstage);
+        if(newstage2 && stage.prop<newstage2.prop){
+            stage.stages.push(stage);
+            return newstage2;
+        }else{
+            if (newstage2) stage.stages.push(newstage2);
+            return stage;
+        }
+    }
 };
 
 
@@ -887,7 +938,9 @@ function analyse(left, right) {
     for (var idx in dps) {
         dps[idx].y = 0;
     }
-    dps[21].y = 100;
+    chart.options.title.text="胜率分析中";
+    chart.aProgress = 0;
+    chart.aWin = 0;
     chart.render();
     var msg=$("#logContainer").empty();
     window.log = {
@@ -918,20 +971,31 @@ function analyse(left, right) {
     stageP.stages = stages;
     function nextRun() {
         var stage = stages.pop();
-        if (stage) {
-            while (!!stage.nextRound) stage=stage.nextRound();
-            if (stage.left.length > 0) dps[10 - stage.left.length].y += stage.prop;
-            else dps[10 + stage.right.length].y += stage.prop;
-            dps[21].y -= stage.prop;
-            chart.render();
-            setTimeout(nextRun, 0);
-        } else {
-            dps[21].y = 0;
+        if (!stage){
             chart.options.title.text="胜率分析完毕";
             $("#bt1").removeAttr("disabled");
             $("#bt2").removeAttr("disabled");
+            $("#btc").hide();
             chart.render();
-            console.log("分析完毕");
+        }
+        else if (window.cancelRun){
+            window.cancelRun = false;
+            chart.options.title.text="胜率分析取消，完成度"+chart.aProgress +"%";
+            $("#bt1").removeAttr("disabled");
+            $("#bt2").removeAttr("disabled");
+            $("#btc").hide();
+            chart.render();
+        }else {
+            while (!!stage.nextRound) stage=stage.nextRound();
+            if (stage.right.length > 0) dps[10 + stage.right.length].y += stage.prop;
+            else {
+                dps[10 - stage.left.length].y += stage.prop;
+                chart.aWin += stage.prop;
+            }
+            chart.aProgress += stage.prop;
+            chart.options.title.text="胜率分析中已完成"+chart.aProgress +"%";
+            chart.render();
+            setTimeout(nextRun, 0);
         }
     }
 
