@@ -646,11 +646,11 @@ var stageP = {
         };
         stage.left[0] = {__proto__: this.left[0]};
         stage.right[0] = {__proto__: this.right[0]};
-        var p = this.prop * prop;
-        stage.prop = p / 100;
-        if (!this.logs || p<0.1) {
-            if (this.logs) $("<li class='end'>分支选择几率" + prop + "%，累计约" + stage.prop + "%，分支过多，后续日将关闭</li>").appendTo(this.logs.msg);
-            this.logs = false;
+        stage.prop = this.prop * prop / 100;
+        if (!this.logs){
+        }else if (stage.prop<0.1) {
+            $("<li class='end'>分支选择几率" + prop + "%，累计约" + stage.prop + "%，分支过多，后续日将关闭</li>").appendTo(this.logs.msg);
+            stage.logs = false;
         }else{
             var sublog = $("<ul>").hide();
             stage.logs =  {
