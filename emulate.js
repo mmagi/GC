@@ -355,7 +355,8 @@ var ABI = (function () {
                         if (n < 1) n = 1;
                         to.setHp(to._hp - n);
                         return  {
-                            msg: this.name + "MISS！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
+                            msg: this.name + "MISS！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP",
+                            power:n
                         };
                     },
                     prop: 100 - this.power2
@@ -368,7 +369,8 @@ var ABI = (function () {
                 if (n < 1) n = 1;
                 to.setHp(to._hp - n);
                 return  {
-                    msg: this.name + "GOOD！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
+                    msg: this.name + "GOOD！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP",
+                    power:n
                 };
             },
             score: function (from, to) {
