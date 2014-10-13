@@ -61,9 +61,9 @@
 <ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
     <div style="margin: 0 auto;">
-        <button id="bt1" class="btn btn-primary" onclick="gofight(false)">模拟</button>
-        <button  id="bt2" class="btn" onclick="gofight(true)">交换左右模拟</button>
-        <button  id="btc" class="btn" onclick="window.cancelRun = true">取消模拟</button>
+        <button id="bt1" class="btn btn-primary" onclick="gofight(false)"><span class="glyphicon glyphicon-play"></span> 模拟</button>
+        <button  id="bt2" class="btn" onclick="swapDeck()"><span class="glyphicon glyphicon-resize-horizontal"></span> 交换</button>
+        <button  id="btc" class="btn" onclick="window.cancelRun = true"><span class="glyphicon glyphicon-stop"></span> 取消</button>
     </div>
 </div>
 
@@ -113,7 +113,8 @@
             {
                 type: "column",
                 bevelEnabled: true,
-                indexLabel: "{y} %",
+                indexLabel: "{y}%",
+                yValueFormatString:"0.00",
                 dataPoints: dps
             }
         ]
@@ -138,7 +139,7 @@
         var $body = $("<li>").appendTo(p)
         $body.append('<button type="button" class="btn btn-default btn-sort"><span class="glyphicon glyphicon-resize-vertical"></span></button>');
         var $card = $("<select>").appendTo($body);
-        $card.multiselect({enableFiltering: true,maxHeight: 500});
+        $card.multiselect({enableFiltering: true,maxHeight: 500,filterPlaceholder: '搜索'});
         $card.multiselect('dataprovider',cards);
         $card.multiselect('rebuild');
         $card.change(function(){
@@ -157,7 +158,7 @@
         var $type = $("<select>").appendTo($body);
         $type.multiselect('dataprovider',types);
         var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
-        $abi.multiselect('dataprovider',[]);
+        $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效"});
         $body.data({getCard:function(){
             var data=_db.cardStatus[$card.val()];
             var tdata=_db.type[$type.val()];
@@ -203,6 +204,12 @@
         });
         if(swap) analyse(r,l);
         else analyse(l,r);
+    }
+    function swapDeck(){
+        var left = $("#leftdeck>li");
+        var right = $("#rightdeck>li");
+        $("#leftdeck").append(right);
+        $("#rightdeck").append(left);
     }
 </script>
 </body>
