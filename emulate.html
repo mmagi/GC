@@ -123,14 +123,14 @@
     chart.render();
     var cards=[{label:"无",value:0}];
     for (var idx in _db.cardStatus){
-        if (idx<100000 && _db.cardStatus[idx][7]==2) cards.push({label:_db.cardStatus[idx][0],value:idx});
+        if (idx<100000 && _db.cardStatus[idx][7]>0) cards.push({label:_db.cardStatus[idx][0],value:idx});
     }
     var types=[];
     for (var idx in _db.type){
         types.push({label:_db.type[idx][0],value:idx});
     }
-    function caculate(lv1,lv60,rate){
-        var a = lv1+(lv60-lv1)*69/59;
+    function caculate(lv1,lv60,rate,maxlv,re){
+        var a = lv1+(lv60-lv1)*(maxlv-1+re*5)/(maxlv-1);
         return parseInt(rate*parseInt(a))+parseInt(0.2*a);
 
     }
@@ -157,7 +157,7 @@
         var $type = $("<select>").appendTo($body);
         $type.multiselect('dataprovider',types);
         var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
-        $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效"});
+        $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效",disableIfEmpty: true});
         $body.data({getCard:function(){
             var data=_db.cardStatus[$card.val()];
             var tdata=_db.type[$type.val()];
@@ -165,12 +165,12 @@
             return {
                 name:data[0],
                 element:data[4],
-                maxHp:caculate(data[8],data[14],tdata[1]),
-                maxMp:caculate(data[9],data[15],tdata[2]),
-                atk:caculate(data[10],data[16],tdata[3]),
-                def:caculate(data[11],data[17],tdata[4]),
-                spd:caculate(data[12],data[18],tdata[5]),
-                itl:caculate(data[13],data[19],tdata[6]),
+                maxHp:caculate(data[ 8],data[14],tdata[1],data[5],data[7]),
+                maxMp:caculate(data[ 9],data[15],tdata[2],data[5],data[7]),
+                atk:  caculate(data[10],data[16],tdata[3],data[5],data[7]),
+                def:  caculate(data[11],data[17],tdata[4],data[5],data[7]),
+                spd:  caculate(data[12],data[18],tdata[5],data[5],data[7]),
+                itl:  caculate(data[13],data[19],tdata[6],data[5],data[7]),
                 abi:$abi.val()
             };
         }});
