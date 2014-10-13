@@ -643,307 +643,308 @@ var cardP = {
         return bestAbi;
     }
 };
-var stageP = {
-    get_from: function () {
-        return this.casting.from ? this.left[0] : this.right[0];//t=left,f=right
-    },
-    get_to: function () {
-        return this.casting.to ? this.left[0] : this.right[0];//t=left,f=right
-    },
-    fork: function (prop) {
-        var stage = {
-            __proto__: this,
-            left: this.left.slice(0),
-            right: this.right.slice(0)
-        };
-        stage.left[0] = {__proto__: this.left[0]};
-        stage.right[0] = {__proto__: this.right[0]};
-        stage.prop = this.prop * prop / 100;
-        if (!this.logs){
-        }else if (stage.prop<0.1) {
-            $("<li class='end'>分支选择几率" + prop + "%，累计约" + stage.prop + "%，分支过多，后续日将关闭</li>").appendTo(this.logs.msg);
-            stage.logs = false;
-        }else{
-            var sublog = $("<ul>").hide();
-            stage.logs =  {
-                msg: sublog,
-                sub: []
-            };
-            $("<li class='branch'>分支选择几率" + prop + "%，累计约" + stage.prop + "%</li>").appendTo(this.logs.msg).click(function (){sublog.toggle()});
-            sublog.appendTo(this.logs.msg);
-            this.logs.sub.push(stage.logs);
+var stageP = function(){
+    var swapCard = function () {
+        var stage = this;
+        var idx, length;
+        for (idx = 0, length = stage.left.length; idx < length; idx++) {
+            if (stage.left[idx]._hp > 0) break;
+            stage.log(stage.left[idx].name+"退场");
         }
-        return stage;
-    },
-    log: function (text,cls) {
-        if (!this.logs) return;
-        if (!cls) this.logs.msg.append("<li class='log'>"+text+"</li>");
-        else this.logs.msg.append("<li class='"+cls+"'>"+text+"</li>");
-    }
-};
-var swapCard = function () {
-    var stage = this;
-    var idx, length;
-    for (idx = 0, length = stage.left.length; idx < length; idx++) {
-        if (stage.left[idx]._hp > 0) break;
-        stage.log(stage.left[idx].name+"退场");
-    }
-    if (idx > 0) {
-        stage.left = stage.left.slice(idx);
-        if (stage.left.length > 0) stage.left[0] = {__proto__:stage.left[0]};
-    }
-
-    for (idx = 0, length = stage.right.length; idx < length; idx++) {
-        if (stage.right[idx]._hp > 0) break;
-        stage.log(stage.right[idx].name+"退场");
-    }
-    if (idx > 0) {
-        stage.right = stage.right.slice(idx);
-        if (stage.right.length > 0) stage.right[0] = {__proto__:stage.right[0]};
-    }
-    stage.nextRound = false;
-    if (stage.right.length < 1) {
-        stage.win = true;
-        stage.log("战斗结束，左方胜"+stage.left.length+"张卡","end")
-    }
-    else if (stage.left.length < 1) {
-        stage.win = false;
-        stage.log("战斗结束，右方胜"+stage.right.length+"张卡","end")
-    }
-    else stage.nextRound = entranceCast;
-    return stage;
-};
-
-var entranceCast = function () {
-    var stage = this;
-    var abiL = stage.left[0].selectEntranceAbi(stage.right[0]);
-    var abiR = stage.right[0].selectEntranceAbi(stage.left[0]);
-    if (!!abiL && !!abiR) {
-        if (abiL.enOrder > abiR.enOrder) abiR = null;
-        else if (abiL.enOrder < abiR.enOrder) abiL = null;
-        else if (stage.right[0].actSpd > stage.left[0].actSpd) abiL = null;
-        else abiR = null;
-    }
-    if (!!abiL) {
-        stage.casting = {
-            from: true,
-            to: false,
-            abi: abiL
-        };
-    } else if (!!abiR) {
-        stage.casting = {
-            from: false,
-            to: true,
-            abi: abiR
-        };
-    } else {
-        stage.nextRound = fightCast;
-        return stage;
-    }
-    var ret = stage.casting.abi.cast(stage.get_from());
-    stage.log(ret.msg);
-    stage.nextRound = entranceApply;
-    return stage;
-};
-
-var entranceApply = function () {
-    var stage = this;
-    var abi, ret;
-    abi = stage.casting.abi;
-    if (!!abi.getOtherCase) {
-        var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
-        var newstage = stage.fork(newabi.prop);
-        newstage.casting.abi = newabi;
-//        stage.stages.push(newstage);
-        stage = stage.fork(100-newabi.prop);
-    }
-    ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
-    stage.log(ret.msg);
-    if (stage.get_to()._hp > 0) {
-        abi = stage.get_to().selectFightbackAbi(abi);
-        if (!!abi) {
-            stage.casting = {
-                from: stage.casting.to,
-                to: stage.casting.from,
-                abi: abi,
-                ref: ret
-            };
-            ret = stage.casting.abi.cast(stage.get_from());
-            stage.log(ret.msg);
-            stage.nextRound = entranceApply;
-        } else {
-            stage.nextRound = entranceCast;
+        if (idx > 0) {
+            stage.left = stage.left.slice(idx);
+            if (stage.left.length > 0) stage.left[0] = {__proto__:stage.left[0]};
         }
-    } else {
-        abi = stage.get_to().selectExitAbi();
-        if (!!abi) {
-            stage.casting = {
-                from: stage.casting.to,
-                to: !stage.casting.to,
-                abi: abi,
-                ref: ret
-            };
-            ret = stage.casting.abi.cast(stage.get_from());
-            stage.log(ret.msg);
-            stage.nextRound = exitApply;
-        } else {
-            stage.nextRound = swapCard;
-        }
-    }
-    if(newstage && stage.prop<newstage.prop){
-        stage.stages.push(stage);
-        return newstage;
-    }else {
-        if (newstage) stage.stages.push(newstage);
-        return stage;
-    }
-};
-var exitApply = function () {
-    var stage = this;
-    var abi, ret;
-    abi = stage.casting.abi;
-    if (!!abi.getOtherCase) {
-        var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
-        var newstage = stage.fork(newabi.prop);
-        newstage.casting = {
-            __proto__: this.casting,
-            abi: newabi
-        };
-        stage = stage.fork(100-newabi.prop);
-    }
-    ret = abi.apply(stage.get_from(), stage.get_to());
-    stage.log(ret.msg);
-    if (stage.get_from()._hp > 0) {
-        stage.nextRound = entranceCast;
-    } else {
-        stage.nextRound = swapCard;
-    }
-    if(newstage && stage.prop<newstage.prop){
-        stage.stages.push(stage);
-        return newstage;
-    }else {
-        if (newstage) stage.stages.push(newstage);
-        return stage;
-    }
-};
-var fightCast = function () {
-    var stage = this;
-    var atk, def, dir;
-    if (stage.left[0].actSpd >= stage.right[0].actSpd) {
-        atk = stage.left[0];
-        def = stage.right[0];
-        dir = true;
-    } else {
-        def = stage.left[0];
-        atk = stage.right[0];
-        dir = false;
-    }
-    atk.actSpd -= def.actSpd;
-    def.actSpd = parseInt(def.spd * (100 + def.perSpd) / 100);
 
-    var abi = atk.selectAbi(def);
-    var ret = abi.cast(atk);
-    stage.log(ret.msg);
-    stage.nextRound = fightApply;
-    if (atk.perConfuse > 0) {
-        var newstage = stage.fork(atk.perConfuse);
-        newstage.casting = {
-            from: dir,
-            to: dir,
-            abi: abi
-        };
-        newstage.log("混乱生效");
-        stage = stage.fork(100 - atk.perConfuse);
-        stage.log("混乱未生效");
-    }
-    stage.casting = {
-        from: dir,
-        to: !dir,
-        abi: abi
+        for (idx = 0, length = stage.right.length; idx < length; idx++) {
+            if (stage.right[idx]._hp > 0) break;
+            stage.log(stage.right[idx].name+"退场");
+        }
+        if (idx > 0) {
+            stage.right = stage.right.slice(idx);
+            if (stage.right.length > 0) stage.right[0] = {__proto__:stage.right[0]};
+        }
+        stage.nextRound = false;
+        if (stage.right.length < 1) {
+            stage.win = true;
+            stage.log("战斗结束，左方胜"+stage.left.length+"张卡","end")
+        }
+        else if (stage.left.length < 1) {
+            stage.win = false;
+            stage.log("战斗结束，右方胜"+stage.right.length+"张卡","end")
+        }
+        else stage.nextRound = entranceCast;
+        return stage;
     };
-    if(newstage && stage.prop<newstage.prop){
-        stage.stages.push(stage);
-        return newstage;
-    }else {
-        if (newstage) stage.stages.push(newstage);
-        return stage;
-    }
-};
-var fightApply = function () {
-    var stage = this;
-    var ret;
-    var abi = stage.casting.abi;
-    var abiBack = stage.get_to().selectMissAbi(abi);
-    if (!!abiBack) {
-        var newstage = stage.fork(abiBack.prop);
-        ret = abiBack.cast(newstage.get_to());
-        newstage.log(ret.msg);
-        abiBack.apply(newstage.get_from(), newstage.get_to());
-        newstage.nextRound = fightCast;
-//        stage.stages.push(newstage);
-        stage = stage.fork(100 - abiBack.prop);
-    }
-    if (!!abi.getOtherCase) {
-        var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
-        var newstage2 = stage.fork( newabi.prop);
-        newstage2.casting.abi = newabi
-//        stage.stages.push(newstage2);
-        stage = stage.fork(100 - newabi.prop);
-    }
-    ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
-    stage.log(ret.msg);
-    if (stage.get_to()._hp > 0) {
-        abi = stage.get_to().selectFightbackAbi(abi);
-        if (stage.casting.from != stage.casting.to && !!abi) {
+
+    var entranceCast = function () {
+        var stage = this;
+        var abiL = stage.left[0].selectEntranceAbi(stage.right[0]);
+        var abiR = stage.right[0].selectEntranceAbi(stage.left[0]);
+        if (!!abiL && !!abiR) {
+            if (abiL.enOrder > abiR.enOrder) abiR = null;
+            else if (abiL.enOrder < abiR.enOrder) abiL = null;
+            else if (stage.right[0].actSpd > stage.left[0].actSpd) abiL = null;
+            else abiR = null;
+        }
+        if (!!abiL) {
             stage.casting = {
-                from: stage.casting.to,
-                to: stage.casting.from,
-                abi: abi,
-                ref: ret
+                from: true,
+                to: false,
+                abi: abiL
             };
-            ret = stage.casting.abi.cast(stage.get_from());
-            stage.log(ret.msg);
-            stage.nextRound = fightApply;
+        } else if (!!abiR) {
+            stage.casting = {
+                from: false,
+                to: true,
+                abi: abiR
+            };
         } else {
             stage.nextRound = fightCast;
+            return stage;
         }
-    } else {
-        abi = stage.get_to().selectExitAbi();
-        if (!!abi) {
-            stage.casting = {
-                from: stage.casting.to,
-                to:  !stage.casting.to,
-                abi: abi,
-                ref: ret
+        var ret = stage.casting.abi.cast(stage.get_from());
+        stage.log(ret.msg);
+        stage.nextRound = entranceApply;
+        return stage;
+    };
+
+    var entranceApply = function () {
+        var stage = this;
+        var abi, ret;
+        abi = stage.casting.abi;
+        if (!!abi.getOtherCase) {
+            var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
+            var newstage = stage.fork(newabi.prop);
+            newstage.casting.abi = newabi;
+//        stage.stages.push(newstage);
+            stage = stage.fork(100-newabi.prop);
+        }
+        ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
+        stage.log(ret.msg);
+        if (stage.get_to()._hp > 0) {
+            abi = stage.get_to().selectFightbackAbi(abi);
+            if (!!abi) {
+                stage.casting = {
+                    from: stage.casting.to,
+                    to: stage.casting.from,
+                    abi: abi,
+                    ref: ret
+                };
+                ret = stage.casting.abi.cast(stage.get_from());
+                stage.log(ret.msg);
+                stage.nextRound = entranceApply;
+            } else {
+                stage.nextRound = entranceCast;
+            }
+        } else {
+            abi = stage.get_to().selectExitAbi();
+            if (!!abi) {
+                stage.casting = {
+                    from: stage.casting.to,
+                    to: !stage.casting.to,
+                    abi: abi,
+                    ref: ret
+                };
+                ret = stage.casting.abi.cast(stage.get_from());
+                stage.log(ret.msg);
+                stage.nextRound = exitApply;
+            } else {
+                stage.nextRound = swapCard;
+            }
+        }
+        if(newstage && stage.prop<newstage.prop){
+            stage.stages.push(stage);
+            return newstage;
+        }else {
+            if (newstage) stage.stages.push(newstage);
+            return stage;
+        }
+    };
+    var exitApply = function () {
+        var stage = this;
+        var abi, ret;
+        abi = stage.casting.abi;
+        if (!!abi.getOtherCase) {
+            var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
+            var newstage = stage.fork(newabi.prop);
+            newstage.casting = {
+                __proto__: this.casting,
+                abi: newabi
             };
-            ret = stage.casting.abi.cast(stage.get_from());
-            stage.log(ret.msg);
-            stage.nextRound = exitApply;
+            stage = stage.fork(100-newabi.prop);
+        }
+        ret = abi.apply(stage.get_from(), stage.get_to());
+        stage.log(ret.msg);
+        if (stage.get_from()._hp > 0) {
+            stage.nextRound = entranceCast;
         } else {
             stage.nextRound = swapCard;
         }
-    }
-    if (newstage && stage.prop<newstage.prop){
-        if(newstage2 && newstage.prop<newstage2.prop){
+        if(newstage && stage.prop<newstage.prop){
             stage.stages.push(stage);
-            stage.stages.push(newstage);
-            return newstage2;
-        }else{
-            stage.stages.push(stage);
-            if (newstage2) stage.stages.push(newstage2);
             return newstage;
-        }
-    }else{
-        if (newstage) stage.stages.push(newstage);
-        if(newstage2 && stage.prop<newstage2.prop){
-            stage.stages.push(stage);
-            return newstage2;
-        }else{
-            if (newstage2) stage.stages.push(newstage2);
+        }else {
+            if (newstage) stage.stages.push(newstage);
             return stage;
         }
+    };
+    var fightCast = function () {
+        var stage = this;
+        var atk, def, dir;
+        if (stage.left[0].actSpd >= stage.right[0].actSpd) {
+            atk = stage.left[0];
+            def = stage.right[0];
+            dir = true;
+        } else {
+            def = stage.left[0];
+            atk = stage.right[0];
+            dir = false;
+        }
+        atk.actSpd -= def.actSpd;
+        def.actSpd = parseInt(def.spd * (100 + def.perSpd) / 100);
+
+        var abi = atk.selectAbi(def);
+        var ret = abi.cast(atk);
+        stage.log(ret.msg);
+        stage.nextRound = fightApply;
+        if (atk.perConfuse > 0) {
+            var newstage = stage.fork(atk.perConfuse);
+            newstage.casting = {
+                from: dir,
+                to: dir,
+                abi: abi
+            };
+            newstage.log("混乱生效");
+            stage = stage.fork(100 - atk.perConfuse);
+            stage.log("混乱未生效");
+        }
+        stage.casting = {
+            from: dir,
+            to: !dir,
+            abi: abi
+        };
+        if(newstage && stage.prop<newstage.prop){
+            stage.stages.push(stage);
+            return newstage;
+        }else {
+            if (newstage) stage.stages.push(newstage);
+            return stage;
+        }
+    };
+    var fightApply = function () {
+        var stage = this;
+        var ret;
+        var abi = stage.casting.abi;
+        var abiBack = stage.get_to().selectMissAbi(abi);
+        if (!!abiBack) {
+            var newstage = stage.fork(abiBack.prop);
+            ret = abiBack.cast(newstage.get_to());
+            newstage.log(ret.msg);
+            abiBack.apply(newstage.get_from(), newstage.get_to());
+            newstage.nextRound = fightCast;
+            stage = stage.fork(100 - abiBack.prop);
+        }
+        if (!!abi.getOtherCase) {
+            var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
+            var newstage2 = stage.fork( newabi.prop);
+            newstage2.casting.abi = newabi
+            stage = stage.fork(100 - newabi.prop);
+        }
+        ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
+        stage.log(ret.msg);
+        if (stage.get_to()._hp > 0) {
+            abi = stage.get_to().selectFightbackAbi(abi);
+            if (stage.casting.from != stage.casting.to && !!abi) {
+                stage.casting = {
+                    from: stage.casting.to,
+                    to: stage.casting.from,
+                    abi: abi,
+                    ref: ret
+                };
+                ret = stage.casting.abi.cast(stage.get_from());
+                stage.log(ret.msg);
+                stage.nextRound = fightApply;
+            } else {
+                stage.nextRound = fightCast;
+            }
+        } else {
+            abi = stage.get_to().selectExitAbi();
+            if (!!abi) {
+                stage.casting = {
+                    from: stage.casting.to,
+                    to:  !stage.casting.to,
+                    abi: abi,
+                    ref: ret
+                };
+                ret = stage.casting.abi.cast(stage.get_from());
+                stage.log(ret.msg);
+                stage.nextRound = exitApply;
+            } else {
+                stage.nextRound = swapCard;
+            }
+        }
+        if (newstage && stage.prop<newstage.prop){
+            if(newstage2 && newstage.prop<newstage2.prop){
+                stage.stages.push(stage);
+                stage.stages.push(newstage);
+                return newstage2;
+            }else{
+                stage.stages.push(stage);
+                if (newstage2) stage.stages.push(newstage2);
+                return newstage;
+            }
+        }else{
+            if (newstage) stage.stages.push(newstage);
+            if(newstage2 && stage.prop<newstage2.prop){
+                stage.stages.push(stage);
+                return newstage2;
+            }else{
+                if (newstage2) stage.stages.push(newstage2);
+                return stage;
+            }
+        }
+    };
+    return {
+        nextRound: swapCard,
+        get_from: function () {
+            return this.casting.from ? this.left[0] : this.right[0];//t=left,f=right
+        },
+        get_to: function () {
+            return this.casting.to ? this.left[0] : this.right[0];//t=left,f=right
+        },
+        fork: function (prop) {
+            var stage = {
+                __proto__: this,
+                left: this.left.slice(0),
+                right: this.right.slice(0)
+            };
+            stage.left[0] = {__proto__: this.left[0]};
+            stage.right[0] = {__proto__: this.right[0]};
+            stage.prop = this.prop * prop / 100;
+            if (!this.logs){
+            }else if (stage.prop<0.1) {
+                $("<li class='end'>分支选择几率" + prop + "%，累计约" + stage.prop + "%，分支过多，后续日将关闭</li>").appendTo(this.logs.msg);
+                stage.logs = false;
+            }else{
+                var sublog = $("<ul>").hide();
+                stage.logs =  {
+                    msg: sublog,
+                    sub: []
+                };
+                $("<li class='branch'>分支选择几率" + prop + "%，累计约" + stage.prop + "%</li>").appendTo(this.logs.msg).click(function (){sublog.toggle()});
+                sublog.appendTo(this.logs.msg);
+                this.logs.sub.push(stage.logs);
+            }
+            return stage;
+        },
+        log: function (text,cls) {
+            if (!this.logs) return;
+            if (!cls) this.logs.msg.append("<li class='log'>"+text+"</li>");
+            else this.logs.msg.append("<li class='"+cls+"'>"+text+"</li>");
+        }
     }
-};
+}();
 
 
 function analyse(left, right) {
@@ -976,8 +977,7 @@ function analyse(left, right) {
             left: left,
             right: right,
             prop: 100,
-            logs: window.log,
-            nextRound: swapCard
+            logs: window.log
         }
     ];
     stageP.stages = stages;
