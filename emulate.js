@@ -984,7 +984,7 @@ function analyse(left, right) {
     function nextRun() {
         var stage = stages.shift();
         if (!stage){
-            chart.options.title.text="胜率分析完毕";
+            chart.options.title.text="胜率分析完毕，合计胜率"+chart.aWin +"%";
             $("#bt1").removeAttr("disabled");
             $("#bt2").removeAttr("disabled");
             $("#btc").hide();
