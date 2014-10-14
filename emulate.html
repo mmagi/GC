@@ -113,7 +113,7 @@
                 type: "column",
                 bevelEnabled: true,
                 indexLabel: "{y}%",
-                yValueFormatString:"0.00",
+                yValueFormatString:"0.0",
                 dataPoints: dps
             }
         ]
@@ -156,6 +156,7 @@
         });
         var $type = $("<select>").appendTo($body);
         $type.multiselect('dataprovider',types);
+        $type.val("7");
         var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
         $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效",disableIfEmpty: true});
         $body.data({getCard:function(){

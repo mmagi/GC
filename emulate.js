@@ -984,7 +984,7 @@ function analyse(left, right) {
     function nextRun() {
         var stage = stages.shift();
         if (!stage){
-            chart.options.title.text="胜率分析完毕，合计胜率"+chart.aWin +"%";
+            chart.options.title.text="胜率分析完毕，合计胜率"+chart.aWin.toFixed(2) +"%";
             $("#bt1").removeAttr("disabled");
             $("#bt2").removeAttr("disabled");
             $("#btc").hide();
@@ -992,7 +992,7 @@ function analyse(left, right) {
         }
         else if (window.cancelRun){
             window.cancelRun = false;
-            chart.options.title.text="胜率分析取消，完成度"+chart.aProgress +"%";
+            chart.options.title.text="胜率分析取消，完成度"+chart.aProgress.toFixed(1)+"%，胜率介于"+chart.aWin.toFixed(1) +"%至"+(chart.aWin+100-chart.aProgress).toFixed(1) +"%之间";
             $("#bt1").removeAttr("disabled");
             $("#bt2").removeAttr("disabled");
             $("#btc").hide();
