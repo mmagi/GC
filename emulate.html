@@ -14,7 +14,7 @@
     <script src="multiselect.js?2"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/dist/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141012b6"></script>
+    <script type="text/javascript" src="emulate.js?20141014"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -55,14 +55,15 @@
     </style>
 </head>
 <body>
-<h3 style="text-align: center">抖M魔物模拟器测试版v20141012b6</h3>
+<h3 style="text-align: center">抖M魔物模拟器测试版v20141014</h3>
 <ol id="leftdeck"  class="deck" style="float:left;"></ol>
 <ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
     <div style="margin: 0 auto;">
-        <button id="bt1" class="btn btn-primary" onclick="gofight(false)"><span class="glyphicon glyphicon-play"></span> 模拟</button>
-        <button  id="bt2" class="btn" onclick="swapDeck()"><span class="glyphicon glyphicon-resize-horizontal"></span> 交换</button>
-        <button  id="btc" class="btn" onclick="window.cancelRun = true"><span class="glyphicon glyphicon-stop"></span> 取消</button>
+        <button id="btE" class="btn btn-success-" onclick="gofight(true)"><span class="glyphicon glyphicon-play"></span> 模拟统计</button>
+        <button id="btA" class="btn btn-primary" onclick="gofight(false)"><span class="glyphicon glyphicon-play"></span> 分析统计</button>
+        <button  id="bt2" class="btn" onclick="swapDeck()"><span class="glyphicon glyphicon-resize-horizontal"></span> 交换卡组</button>
+        <button  id="btc" class="btn" onclick="window.cancelRun = true"><span class="glyphicon glyphicon-stop"></span> 停止</button>
     </div>
 </div>
 
@@ -187,9 +188,10 @@
         card(p);
     }
     p.sortable({handle:'button.btn-sort'});
-    function gofight(swap){
+    function gofight(once){
         window.cancelRun = false;
-        $("#bt1").attr("disabled", true);
+        $("#btE").attr("disabled", true);
+        $("#btA").attr("disabled", true);
         $("#bt2").attr("disabled", true);
         $("#btc").show();
         var l=[];
@@ -202,8 +204,14 @@
             var ret = $(elemnt).data().getCard();
             if (ret) r.push(ret);
         });
-        if(swap) analyse(r,l);
-        else analyse(l,r);
+        var restore=function(){
+            $("#btE").removeAttr("disabled");
+            $("#btA").removeAttr("disabled");
+            $("#bt2").removeAttr("disabled");
+            $("#btc").hide();
+        };
+        if(once) run(l,r,restore);
+        else analyse(l,r,restore);
     }
     function swapDeck(){
         var left = $("#leftdeck>li");
