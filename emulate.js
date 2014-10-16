@@ -4,12 +4,11 @@ var ABI = (function () {
             if (!card['abi' + this.id]) return true;
             else return false;
         },
-        cast: function (card) {
+        cast: function (log, card) {
             card.setMp(card._mp - this.mp);
             card['abi' + this.id] = true;
-            return  {
-                msg: card.name + "使用" + this.name + "，消耗MP" + this.mp + "剩余" + card._mp + "MP"
-            };
+            if (log) log.log(card.name + "使用" + this.name + "，消耗MP" + this.mp + "剩余" + card._mp + "MP");
+            return  null;
         }
     };
     var basicAtk = {
@@ -22,16 +21,14 @@ var ABI = (function () {
         enOrder: 0,
         mp: 0,
         power: 100,
-        apply: function (from, to, ref) {
+        apply: function (log, from, to, ref) {
             var n = parseInt(
                     from.atk * (from.perAtk + this.power) / 100 - to.def * (100 + to.perDef) / 200
             );
             if (n < 1) n = 1;
             to.setHp(to._hp - n);
-            return  {
-                power: n,
-                msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
-            };
+            if (log) log.log(this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP");
+            return  n;
         },
         score: function (from, to) {
             var n = parseInt(
@@ -47,7 +44,7 @@ var ABI = (function () {
         isDamageAtk: true,
         isPhysicAtk: true,
         isNormalAbi: true,
-        apply: function (from, to, ref) {
+        apply: function (log, from, to, ref) {
             var n = parseInt(
                     from.atk * (from.perAtk + this.power) / 100 - to.def * (100 + to.perDef) / 200
             );
@@ -58,18 +55,16 @@ var ABI = (function () {
                 power = to.perSpd - 10;
                 if (power < -50) power = -50;
                 to.perSpd = power;
-                msg = "，并使其急速降低" + this.power2 + "点至" + power + "%"
+                if (log) msg = "，并使其急速降低" + this.power2 + "点至" + power + "%"
             }
             else if (this.element == 12 && this.power2 > 0) {
                 power = to.perDef - 10;
                 if (power < -50) power = -50;
                 to.perDef = power;
-                msg = "，并使其防御降低" + this.power2 + "点至" + power + "%"
+                if (log) msg = "，并使其防御降低" + this.power2 + "点至" + power + "%"
             }
-            return  {
-                power: n,
-                msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP" + msg
-            };
+            if (log) log.log(this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP" + msg);
+            return  n;
         },
         score: function (from, to) {
             var n = parseInt(
@@ -82,18 +77,17 @@ var ABI = (function () {
     };
     var elementAtk = {
         __proto__: commonAbi,
+        isDamageAtk: true,
         isNormalAbi: true,
-        apply: function (from, to, ref) {
+        apply: function (log, from, to, ref) {
             var rate = to.elementAtkRate(this.element);
             var n = parseInt(
                     rate * from.itl * (from.perItl + this.power) / 100 - to.itl * (100 + to.perItl) / 200
             );
             if (n < 1) n = 1;
             to.setHp(to._hp - n);
-            return  {
-                power: n,
-                msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
-            };
+            if (log) log.log(this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP");
+            return  n;
         },
         score: function (from, to) {
             var rate = to.elementAtkRate(this.element);
@@ -107,7 +101,7 @@ var ABI = (function () {
     };
     var buff = {
         __proto__: commonAbi,
-        apply: function (from, to, ref) {
+        apply: function (log, from, to, ref) {
             var power = from[this.per] + this.power;
             from[this.per] = power;
             return  {
@@ -118,26 +112,25 @@ var ABI = (function () {
     };
     var debuff = {
         __proto__: commonAbi,
-        apply: function (from, to, ref) {
+        apply: function (log, from, to, ref) {
             var power = to[this.per] - this.power;
             if (power < -50) power = -50;
             to[this.per] = power;
-            return  {
-                msg: to.name + this.bname + "降低" + this.power + "点至" + power + "%"
-            };
+            if (log) log.log(to.name + this.bname + "降低" + this.power + "点至" + power + "%");
+            return  null;
         },
         enOrder: 4
     };
     var buff2 = {
         __proto__: commonAbi,
-        apply: function (from, to, ref) {
+        apply: function (log, from, to, ref) {
             var power = from[this.per] + this.power;
             from[this.per] = power;
             var power2 = from[this.per2] + this.power;
             from[this.per2] = power2;
-            return  {
-                msg: from.name + this.bname + "提高" + this.power + "点至" + power + "%，" + this.bname2 + "提高" + this.power + "点至" + power2 + "%"
-            };
+            if (log) log.log(from.name + this.bname + "提高" + this.power + "点至" + power + "%，" + this.bname2 + "提高" + this.power + "点至" + power2 + "%");
+            return  null;
+            ;
         },
         enOrder: 4
     };
@@ -151,6 +144,7 @@ var ABI = (function () {
         6: elementAtk,
         7: {//不死
             __proto__: elementAtk,
+            isDamageAtk:false,
             getOtherCase: function (from, to) {
                 var rate = to.elementAtkRate(this.element);
                 var n = parseInt(
@@ -162,19 +156,17 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
-                        return  {
-                            msg: this.name + "对" + to.name + "没有造成效果"
-                        };
+                    apply: function (log, from, to, ref) {
+                        if (log) log.log(this.name + "对" + to.name + "没有造成效果");
+                        return  null;
                     },
                     prop: 100 - prop
                 }
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 to._hp = 0;
-                return  {
-                    msg: this.name + "对" + to.name + "造成即死效果"
-                };
+                if (log) log.log(this.name + "对" + to.name + "造成即死效果");
+                return  null;
             }
         },
         8: elementAtk,
@@ -198,12 +190,11 @@ var ABI = (function () {
                 if (from.maxHp - from._hp > n) n = from.maxHp - from._hp;
                 return n;
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 var n = parseInt(from.maxHp * this.power / 100);
                 from.setHp(from._hp + n);
-                return  {
-                    msg: this.name + "使" + from.name + "恢复了" + n + "HP，当前剩余" + from._hp + "HP"
-                };
+                if (log) log.log(this.name + "使" + from.name + "恢复了" + n + "HP，当前剩余" + from._hp + "HP");
+                return  null;
             },
             isHeal: true
         },
@@ -213,26 +204,24 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
-                        return  {
-                            msg: from.name + "使用" + this.name + "失败"
-                        };
+                    apply: function (log, from, to, ref) {
+                        if (log) log.log(from.name + "使用" + this.name + "失败");
+                        return null;
                     },
                     prop: 100 - this.power
                 }
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 from._hp = from.maxHp;
-                return  {
-                    msg: this.name + "技能使" + from.name + "复活了"
-                };
+                if (log) log.log(this.name + "技能使" + from.name + "复活了");
+                return  null;
             },
             exOrder: 4
         },
         23: {//吸血
             __proto__: commonAbi,
             isNormalAbi: true,
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 var n = parseInt(
                         from.atk * (from.perAtk + this.power) / 100 - to.def * (100 + to.perDef) / 200
                 );
@@ -240,9 +229,8 @@ var ABI = (function () {
                 to.setHp(to._hp - n);
                 var n2 = parseInt(n * this.power2 / 100);
                 from.setHp(from._hp + n2);
-                return  {
-                    msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP，" + from.name + "吸收了" + n2 + "HP，当前为" + from._hp + "HP"
-                };
+                if (log) log.log(this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP，" + from.name + "吸收了" + n2 + "HP，当前为" + from._hp + "HP");
+                return  null;
             },
             score: function (from, to) {
                 var n = parseInt(
@@ -259,7 +247,7 @@ var ABI = (function () {
         24: {//吸蓝
             __proto__: commonAbi,
             isNormalAbi: true,
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 var n = parseInt(
                         from.itl * (from.perItl + this.power) / 100 - to.itl * (100 + to.perItl) / 200
                 );
@@ -267,9 +255,9 @@ var ABI = (function () {
                 to.setMp(to._mp - n);
                 var n2 = parseInt(n * this.power2 / 100);
                 from.setMp(from._mp + n2);
-                return  {
-                    msg: this.name + "对" + to.name + "的MP造成了" + n + "点伤害，剩余" + to._mp + "MP，" + from.name + "吸收了" + n2 + "MP，当前为" + from._mp + "MP"
-                };
+                if (log) log.log(this.name + "对" + to.name + "的MP造成了" + n + "点伤害，剩余" + to._mp + "MP，" + from.name + "吸收了" + n2 + "MP，当前为" + from._mp + "MP");
+                return  null;
+                ;
             },
             score: function (from, to) {
                 var n = parseInt(
@@ -293,22 +281,20 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
-                        return  {
-                            msg: from.name + "使用" + this.name + "失败"
-                        };
+                    apply: function (log, from, to, ref) {
+                        if (log) log.log(from.name + "使用" + this.name + "失败");
+                        return  null;
                     },
                     prop: 100 - this.power
                 }
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 var n = this.mp + from._mp;
                 to.setHp(to._hp - n);
                 from._hp = 0;
                 from._mp = 0;
-                return  {
-                    msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
-                };
+                if (log) log.log(this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP");
+                return  null;
             },
             exOrder: 2
         },
@@ -318,20 +304,18 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
-                        return  {
-                            msg: from.name + "使用" + this.name + "失败"
-                        };
+                    apply: function (log, from, to, ref) {
+                        if (log) log.log(from.name + "使用" + this.name + "失败");
+                        return  null;
                     },
                     prop: 100 - this.power
                 }
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 from._hp = 1;
                 from._mp = 0;
-                return  {
-                    msg: this.name + "使" + from.name + "承受一击打，当前1HP、0MP"
-                };
+                if (log) log.log(this.name + "使" + from.name + "承受一击打，当前1HP、0MP");
+                return  null;
             },
             exOrder: 3,
             is1hpRelive: true
@@ -348,30 +332,26 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
+                    apply: function (log, from, to, ref) {
                         var n = parseInt(
                                 from.atk * (from.perAtk + 50) / 100
                         );
                         if (n < 1) n = 1;
                         to.setHp(to._hp - n);
-                        return  {
-                            msg: this.name + "MISS！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP",
-                            power: n
-                        };
+                        if (log) log.log(this.name + "MISS！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP");
+                        return  n;
                     },
                     prop: 100 - this.power2
                 };
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 var n = parseInt(
                         from.atk * (from.perAtk + this.power) / 100
                 );
                 if (n < 1) n = 1;
                 to.setHp(to._hp - n);
-                return  {
-                    msg: this.name + "GOOD！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP",
-                    power: n
-                };
+                if (log) log.log(this.name + "GOOD！对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP");
+                return  n;
             },
             score: function (from, to) {
                 var damageGood = from.atk * (from.perAtk + this.power) / 100;
@@ -386,7 +366,7 @@ var ABI = (function () {
         },
         35: {//天界
             __proto__: commonAbi,
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 var msg = "";
                 if (to.perAtk > 0) {
                     to.perAtk = 0;
@@ -404,19 +384,17 @@ var ABI = (function () {
                     to.perItl = 0;
                     msg += "智慧"
                 }
-                return  {
-                    msg: this.name + "使" + to.name + "的" + msg + "buff被消除"
-                };
+                if (log) log.log(this.name + "使" + to.name + "的" + msg + "buff被消除");
+                return  null;
             },
             enOrder: 3
         },
         36: {
             __proto__: commonAbi,
             isPhysicAtkAvoid: true,
-            apply: function (from, to, ref) {
-                return  {
-                    msg: this.name + "使" + to.name + "躲避了攻击"
-                };
+            apply: function (log, from, to, ref) {
+                if (log) log.log(this.name + "使" + to.name + "躲避了攻击");
+                return  null;
             }
         },
         37: {//锁蓝
@@ -425,41 +403,37 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
-                        return  {
-                            msg: from.name + "使用" + this.name + "失败"
-                        };
+                    apply: function (log, from, to, ref) {
+                        if (log) log.log(from.name + "使用" + this.name + "失败");
+                        return  null;
                     },
                     prop: 100 - this.power
                 }
             },
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 to.setMp(0);
-                return  {
-                    msg: this.name + "使" + to.name + "的MP归零"
-                };
+                if (log) log.log(this.name + "使" + to.name + "的MP归零");
+                return  null;
             },
             enOrder: 2
         },
         38: {//全防
             __proto__: commonAbi,
-            apply: function (from, to, ref) {
+            apply: function (log, from, to, ref) {
                 from.allDef = true;
-                return  {
-                    msg: this.name + "使" + from.name + "的属性防御力上升了"
-                };
+                if (log) log.log(this.name + "使" + from.name + "的属性防御力上升了");
+                return  null;
             },
             enOrder: 4
         },
         40: {//反击
             __proto__: commonAbi,
-            apply: function (from, to, ref) {
-                var n = parseInt(ref.power * this.power2 / 100);
+            apply: function (log, from, to, ref) {
+                var n = parseInt(ref * this.power2 / 100);
                 if (n < 1) n = 1;
                 to.setHp(to._hp - n);
-                return  {
-                    msg: this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP"
-                };
+                if (log) log.log(this.name + "对" + to.name + "造成了" + n + "点伤害，剩余" + to._hp + "HP");
+                return  null;
             },
             isAtkBack: true
         },
@@ -469,31 +443,28 @@ var ABI = (function () {
                 return {
                     __proto__: this,
                     getOtherCase: false,
-                    apply: function (from, to, ref) {
-                        return  {
-                            msg: from.name + "使用" + this.name + "失败"
-                        };
+                    apply: function (log, from, to, ref) {
+                        if (log) log.log(from.name + "使用" + this.name + "失败");
+                        return null;
                     },
                     prop: 100 - this.power
                 }
             },
-            apply: function (from, to, ref) {
-                to.perConfuse = this.power2
-                return  {
-                    msg: this.name + "使" + to.name + "的进入" + this.power2 + "%的混乱状态"
-                };
+            apply: function (log, from, to, ref) {
+                to.perConfuse = this.power2;
+                if (log) log.log(this.name + "使" + to.name + "的进入" + this.power2 + "%的混乱状态");
+                return  null;
             },
             enOrder: 1
         },
         //血斩
         43: {
             __proto__: physicAtk,
-            cast: function (card) {
+            cast: function (log, card) {
                 card.setHp(card._hp - this.power2);
                 card['abi' + this.id] = true;
-                return  {
-                    msg: card.name + "使用" + this.name + "，消耗HP" + this.power2 + "剩余" + card._hp + "HP"
-                };
+                if (log) log.log(card.name + "使用" + this.name + "，消耗HP" + this.power2 + "剩余" + card._hp + "HP");
+                return  null;
             },
             score: function (from, to) {
                 var n = parseInt(
@@ -666,23 +637,23 @@ var stageP = function () {
         var stage = this;
         var c = false;
         for (c = stage.left; c && c._hp <= 0; c = c.next)
-            stage.log(c.name + "退场");
+            stage.logs && stage.logs.log(c.name + "退场");
         if (c) stage.left = {__proto__: c};
         else stage.left = false;
         for (c = stage.right; c && c._hp <= 0; c = c.next)
-            stage.log(c.name + "退场");
+            stage.logs && stage.logs.log(c.name + "退场");
         if (c) stage.right = {__proto__: c};
         else stage.right = false;
 
         stage.nextRound = false;
         if (!stage.right) {
             stage.win = true;
-            if (stage.left) stage.log("战斗结束，左方胜" + stage.left.length() + "张卡", "end");
-            else stage.log("战斗结束，战平，判定先手胜", "end");
+            if (stage.left) stage.logs && stage.logs.log("战斗结束，左方胜" + stage.left.length() + "张卡", "end");
+            else stage.logs && stage.logs.log("战斗结束，战平，判定先手胜", "end");
         }
         else if (!stage.left) {
             stage.win = false;
-            stage.log("战斗结束，右方胜" + stage.right.length() + "张卡", "end")
+            stage.logs && stage.logs.log("战斗结束，右方胜" + stage.right.length() + "张卡", "end")
         }
         else stage.nextRound = entranceCast;
         return stage;
@@ -714,8 +685,7 @@ var stageP = function () {
             stage.nextRound = fightCast;
             return stage;
         }
-        var ret = stage.casting.abi.cast(stage.get_from());
-        stage.log(ret.msg);
+        var ret = stage.casting.abi.cast(stage.logs, stage.get_from());
         stage.nextRound = entranceApply;
         return stage;
     };
@@ -734,8 +704,7 @@ var stageP = function () {
 //          stage.stages.push(newstage);
             stage = stage.fork(100 - newabi.prop);
         }
-        ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
-        stage.log(ret.msg);
+        ret = abi.apply(stage.logs, stage.get_from(), stage.get_to(), stage.casting.ref);
         if (stage.get_to()._hp > 0) {
             abi = stage.get_to().selectFightbackAbi(abi);
             if (!!abi) {
@@ -745,8 +714,7 @@ var stageP = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = entranceApply;
             } else {
                 stage.nextRound = entranceCast;
@@ -760,8 +728,7 @@ var stageP = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = exitApply;
             } else {
                 stage.nextRound = swapCard;
@@ -788,8 +755,7 @@ var stageP = function () {
             };
             stage = stage.fork(100 - newabi.prop);
         }
-        ret = abi.apply(stage.get_from(), stage.get_to());
-        stage.log(ret.msg);
+        ret = abi.apply(stage.logs, stage.get_from(), stage.get_to());
         if (stage.get_from()._hp > 0) {
             stage.nextRound = entranceCast;
         } else {
@@ -819,8 +785,7 @@ var stageP = function () {
         def.actSpd = parseInt(def.spd * (100 + def.perSpd) / 100);
 
         var abi = atk.selectAbi(def);
-        var ret = abi.cast(atk);
-        stage.log(ret.msg);
+        var ret = abi.cast(stage.logs, atk);
         stage.nextRound = fightApply;
         if (atk.perConfuse > 0) {
             var newstage = stage.fork(atk.perConfuse);
@@ -829,9 +794,9 @@ var stageP = function () {
                 to: dir,
                 abi: abi
             };
-            newstage.log("混乱生效");
+            newstage.logs && newstage.logs.log("混乱生效");
             stage = stage.fork(100 - atk.perConfuse);
-            stage.log("混乱未生效");
+            stage.logs && stage.logs.log("混乱未生效");
         }
         stage.casting = {
             from: dir,
@@ -853,9 +818,8 @@ var stageP = function () {
         var abiBack = stage.get_to().selectMissAbi(abi);
         if (!!abiBack) {
             var newstage = stage.fork(abiBack.prop);
-            ret = abiBack.cast(newstage.get_to());
-            newstage.log(ret.msg);
-            abiBack.apply(newstage.get_from(), newstage.get_to());
+            ret = abiBack.cast(newstage.logs, newstage.get_to());
+            ret = abiBack.apply(newstage.logs, newstage.get_from(), newstage.get_to());
             newstage.nextRound = fightCast;
             stage = stage.fork(100 - abiBack.prop);
         }
@@ -865,8 +829,7 @@ var stageP = function () {
             newstage2.casting.abi = newabi
             stage = stage.fork(100 - newabi.prop);
         }
-        ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
-        stage.log(ret.msg);
+        ret = abi.apply(stage.logs, stage.get_from(), stage.get_to(), stage.casting.ref);
         if (stage.get_to()._hp > 0) {
             abi = stage.get_to().selectFightbackAbi(abi);
             if (stage.casting.from != stage.casting.to && !!abi) {
@@ -876,8 +839,7 @@ var stageP = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = fightApply;
             } else {
                 stage.nextRound = fightCast;
@@ -891,8 +853,7 @@ var stageP = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = exitApply;
             } else {
                 stage.nextRound = swapCard;
@@ -934,28 +895,10 @@ var stageP = function () {
                 right: {__proto__: this.right}
             };
             stage.prop = this.prop * prop / 100;
-            if (!this.logs) {
-            } else if (stage.prop < 0.1) {
-                $("<li class='end'>分支选择几率" + prop + "%，累计约" + stage.prop + "%，分支过多，后续日将关闭</li>").appendTo(this.logs.msg);
-                stage.logs = false;
-            } else {
-                var sublog = $("<ul>").hide();
-                stage.logs = {
-                    msg: sublog,
-                    sub: []
-                };
-                $("<li class='branch'>分支选择几率" + prop + "%，累计约" + stage.prop + "%</li>").appendTo(this.logs.msg).click(function () {
-                    sublog.toggle()
-                });
-                sublog.appendTo(this.logs.msg);
-                this.logs.sub.push(stage.logs);
+            if (this.logs) {
+                stage.logs = this.logs.sublog(stage.prop, "分支选择几率" + prop + "%，累计约" + stage.prop + "%");
             }
             return stage;
-        },
-        log: function (text, cls) {
-            if (!this.logs) return;
-            if (!cls) this.logs.msg.append("<li class='log'>" + text + "</li>");
-            else this.logs.msg.append("<li class='" + cls + "'>" + text + "</li>");
         }
     }
 }();
@@ -966,23 +909,23 @@ var stageE = function () {
         var stage = this;
         var c = false;
         for (c = stage.left; c && c._hp <= 0; c = c.next)
-            stage.log(c.name + "退场");
+            stage.logs && stage.logs.log(c.name + "退场");
         if (c) stage.left = {__proto__: c};
         else stage.left = false;
         for (c = stage.right; c && c._hp <= 0; c = c.next)
-            stage.log(c.name + "退场");
+            stage.logs && stage.logs.log(c.name + "退场");
         if (c) stage.right = {__proto__: c};
         else stage.right = false;
 
         stage.nextRound = false;
         if (!stage.right) {
             stage.win = true;
-            if (stage.left) stage.log("战斗结束，左方胜" + stage.left.length() + "张卡", "end");
-            else stage.log("战斗结束，战平，判定先手胜", "end");
+            if (stage.left) stage.logs && stage.logs.log("战斗结束，左方胜" + stage.left.length() + "张卡", "end");
+            else stage.logs && stage.logs.log("战斗结束，战平，判定先手胜", "end");
         }
         else if (!stage.left) {
             stage.win = false;
-            stage.log("战斗结束，右方胜" + stage.right.length() + "张卡", "end")
+            stage.logs && stage.logs.log("战斗结束，右方胜" + stage.right.length() + "张卡", "end")
         }
         else stage.nextRound = entranceCast;
         return stage;
@@ -1014,8 +957,7 @@ var stageE = function () {
             stage.nextRound = fightCast;
             return stage;
         }
-        var ret = stage.casting.abi.cast(stage.get_from());
-        stage.log(ret.msg);
+        var ret = stage.casting.abi.cast(stage.logs, stage.get_from());
         stage.nextRound = entranceApply;
         return stage;
     };
@@ -1028,8 +970,7 @@ var stageE = function () {
             var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
             if (Math.random() < newabi.prop / 100) abi = newabi;
         }
-        ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
-        stage.log(ret.msg);
+        ret = abi.apply(stage.logs, stage.get_from(), stage.get_to(), stage.casting.ref);
         if (stage.get_to()._hp > 0) {
             abi = stage.get_to().selectFightbackAbi(abi);
             if (!!abi) {
@@ -1039,8 +980,7 @@ var stageE = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = entranceApply;
             } else {
                 stage.nextRound = entranceCast;
@@ -1054,8 +994,7 @@ var stageE = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = exitApply;
             } else {
                 stage.nextRound = swapCard;
@@ -1071,8 +1010,7 @@ var stageE = function () {
             var newabi = abi.getOtherCase(stage.get_from(), stage.get_to());
             if (Math.random() < newabi.prop / 100) abi = newabi;
         }
-        ret = abi.apply(stage.get_from(), stage.get_to());
-        stage.log(ret.msg);
+        ret = abi.apply(stage.logs, stage.get_from(), stage.get_to());
         if (stage.get_from()._hp > 0) {
             stage.nextRound = entranceCast;
         } else {
@@ -1096,8 +1034,7 @@ var stageE = function () {
         def.actSpd = parseInt(def.spd * (100 + def.perSpd) / 100);
 
         var abi = atk.selectAbi(def);
-        var ret = abi.cast(atk);
-        stage.log(ret.msg);
+        var ret = abi.cast(stage.logs, atk);
         stage.nextRound = fightApply;
         if (atk.perConfuse > 0) {
             if (Math.random() < atk.perConfuse / 100) {
@@ -1106,11 +1043,11 @@ var stageE = function () {
                     to: dir,
                     abi: abi
                 };
-                stage.log("混乱生效");
+                stage.logs && stage.logs.log("混乱生效");
                 return stage;
             }
             else {
-                stage.log("混乱未生效");
+                stage.logs && stage.logs.log("混乱未生效");
             }
         }
         stage.casting = {
@@ -1127,9 +1064,8 @@ var stageE = function () {
         var abiBack = stage.get_to().selectMissAbi(abi);
         if (!!abiBack) {
             if (Math.random() < abiBack.prop / 100) {
-                ret = abiBack.cast(stage.get_to());
-                stage.log(ret.msg);
-                abiBack.apply(stage.get_from(), stage.get_to());
+                ret = abiBack.cast(stage.logs, stage.get_to());
+                abiBack.apply(stage.logs, stage.get_from(), stage.get_to());
                 stage.nextRound = fightCast;
                 return stage;
             }
@@ -1140,8 +1076,7 @@ var stageE = function () {
                 abi = newabi;
             }
         }
-        ret = abi.apply(stage.get_from(), stage.get_to(), stage.casting.ref);
-        stage.log(ret.msg);
+        ret = abi.apply(stage.logs, stage.get_from(), stage.get_to(), stage.casting.ref);
         if (stage.get_to()._hp > 0) {
             abi = stage.get_to().selectFightbackAbi(abi);
             if (stage.casting.from != stage.casting.to && !!abi) {
@@ -1151,8 +1086,7 @@ var stageE = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = fightApply;
             } else {
                 stage.nextRound = fightCast;
@@ -1166,8 +1100,7 @@ var stageE = function () {
                     abi: abi,
                     ref: ret
                 };
-                ret = stage.casting.abi.cast(stage.get_from());
-                stage.log(ret.msg);
+                ret = stage.casting.abi.cast(stage.logs, stage.get_from());
                 stage.nextRound = exitApply;
             } else {
                 stage.nextRound = swapCard;
@@ -1182,29 +1115,22 @@ var stageE = function () {
         },
         get_to: function () {
             return this.casting.to ? this.left : this.right;//t=left,f=right
-        },
-        log: function (text, cls) {
-            if (!this.logs) return;
-            if (!cls) this.logs.msg.append("<li class='log'>" + text + "</li>");
-            else this.logs.msg.append("<li class='" + cls + "'>" + text + "</li>");
         }
     }
 }();
-function run(left, right,final) {
+function run(left, right, final, logs) {
     for (var idx in dps) {
         dps[idx].y = 0;
     }
     chart.options.title.text = "战斗模拟中";
-    chart.options.data[0].indexLabel="{y}次";
-    chart.options.data[0].yValueFormatString= "0";
+
+    chart.options.axisY.suffix = null;
+    chart.options.data[0].indexLabel = "{y}次";
+    chart.options.data[0].yValueFormatString = "0";
     chart.aProgress = 0;
     chart.aWin = 0;
+    chart.lastRTime = new Date().getTime();
     chart.render();
-    var msg = $("#logContainer").empty();
-    window.log = {
-        msg: msg,
-        sub: []
-    };
     var lh = false, rh = false;
     var idx, pre, cur;
     for (idx in left) {
@@ -1231,13 +1157,13 @@ function run(left, right,final) {
             left: lh,
             right: rh,
             prop: 1,
-            logs: window.log
+            logs: logs
         }
         ;
 
     function nextRun() {
         var stage = {
-            __proto__:Sstage
+            __proto__: Sstage
         };
         if (window.cancelRun) {
             window.cancelRun = false;
@@ -1254,12 +1180,15 @@ function run(left, right,final) {
             chart.aWin += 1;
         }
         chart.aProgress += 1;
-        chart.options.title.text = "已模拟战斗胜利" + chart.aWin + "/" + chart.aProgress + "次，约" + (chart.aWin * 100 / chart.aProgress).toFixed(2) + "%，点击停止结束。";
-        chart.render();
+        var now = new Date().getTime();
+        if (now - chart.lastRTime > 500) {
+            chart.options.title.text = "已模拟战斗胜利" + chart.aWin + "/" + chart.aProgress + "次，约" + (chart.aWin * 100 / chart.aProgress).toFixed(2) + "%";
+            chart.render();
+            chart.lastRTime = now
+        }
         if (chart.aProgress == 20) {
-            stage.log("已模拟20次战斗，后续模拟记录将关闭");
+            stage.logs && stage.logs.log("已模拟20次战斗，后续模拟记录将关闭");
             Sstage.logs = false;
-
         }
         setTimeout(nextRun, 0);
 
@@ -1270,21 +1199,18 @@ function run(left, right,final) {
 
 }
 
-function analyse(left, right, final) {
+function analyse(left, right, final, logs) {
     for (var idx in dps) {
         dps[idx].y = 0;
     }
     chart.options.title.text = "胜率分析中";
-    chart.options.data[0].indexLabel="{y}%"
-    chart.options.data[0].yValueFormatString= "0.0";
+    chart.options.axisY.suffix = " %";
+    chart.options.data[0].indexLabel = "{y}%"
+    chart.options.data[0].yValueFormatString = "0.0";
     chart.aProgress = 0;
     chart.aWin = 0;
+    chart.lastRTime = new Date().getTime();
     chart.render();
-    var msg = $("#logContainer").empty();
-    window.log = {
-        msg: msg,
-        sub: []
-    };
     var lh = false, rh = false;
     var idx, pre, cur;
     for (idx in left) {
@@ -1311,7 +1237,7 @@ function analyse(left, right, final) {
             left: lh,
             right: rh,
             prop: 100,
-            logs: window.log
+            logs: logs
         }
     ];
     stages[0].stages = stages;
@@ -1324,7 +1250,7 @@ function analyse(left, right, final) {
         }
         else if (window.cancelRun) {
             window.cancelRun = false;
-            chart.options.title.text = "胜率分析取消，完成度" + chart.aProgress.toFixed(1) + "%，胜率介于" + chart.aWin.toFixed(1) + "%至" + (chart.aWin + 100 - chart.aProgress).toFixed(1) + "%之间";
+            chart.options.title.text = "胜率分析取消，完成度" + chart.aProgress.toFixed(3) + "%，理论胜率介于" + chart.aWin.toFixed(2) + "%至" + (chart.aWin + 100 - chart.aProgress).toFixed(2) + "%之间";
             chart.render();
             final && final();
         } else {
@@ -1336,8 +1262,14 @@ function analyse(left, right, final) {
                 chart.aWin += stage.prop;
             }
             chart.aProgress += stage.prop;
-            chart.options.title.text = "胜率分析中已完成" + chart.aProgress + "%";
-            chart.render();
+
+            var now = new Date().getTime();
+            if (now - chart.lastRTime > 500) {
+                chart.options.title.text = "胜率分析中已完成" + chart.aProgress + "%";
+                chart.render();
+                chart.lastRTime = now
+            }
+            ;
             setTimeout(nextRun, 0);
         }
     }

@@ -14,7 +14,7 @@
     <script src="multiselect.js?2"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/dist/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141014"></script>
+    <script type="text/javascript" src="emulate.js?20141015"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -55,13 +55,13 @@
     </style>
 </head>
 <body>
-<h3 style="text-align: center">抖M魔物模拟器测试版v20141014</h3>
+<h3 style="text-align: center">抖M魔物模拟器测试版v20141015</h3>
 <ol id="leftdeck"  class="deck" style="float:left;"></ol>
 <ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
     <div style="margin: 0 auto;">
-        <button id="btE" class="btn btn-success-" onclick="gofight(true)"><span class="glyphicon glyphicon-play"></span> 模拟统计</button>
-        <button id="btA" class="btn btn-primary" onclick="gofight(false)"><span class="glyphicon glyphicon-play"></span> 分析统计</button>
+        <button id="btE" class="btn btn-success" onclick="gofight(false)"><span class="glyphicon glyphicon-play"></span> 模拟统计</button>
+        <button id="btA" class="btn btn-primary" onclick="gofight(true)"><span class="glyphicon glyphicon-play"></span> 分析统计</button>
         <button  id="bt2" class="btn" onclick="swapDeck()"><span class="glyphicon glyphicon-resize-horizontal"></span> 交换卡组</button>
         <button  id="btc" class="btn" onclick="window.cancelRun = true"><span class="glyphicon glyphicon-stop"></span> 停止</button>
     </div>
@@ -188,7 +188,33 @@
         card(p);
     }
     p.sortable({handle:'button.btn-sort'});
-    function gofight(once){
+    var log = $("#logContainer");
+    log.log = function (text, cls) {
+        if (!cls) cls = "log";
+        return $("<li class='" + cls + "'>" + text + "</li>").appendTo(this);
+    };
+    log.sublog = function (prop, text) {
+        var sub = $("<ul>").hide();
+        $("<li class='branch'>" + text + "</li>").appendTo(this).click(function(){
+            sub.toggle();
+        });
+        sub.appendTo(this);
+        if (prop < 0.1) {
+            $("<li class='end'>分支过细，后续记录将关闭</li>").appendTo(sub);
+            return false;
+        }else{
+            sub.log = this.log;
+            sub.sublog = this.sublog;
+            return sub;
+        }
+    };
+    var restore=function(){
+        $("#btE").removeAttr("disabled");
+        $("#btA").removeAttr("disabled");
+        $("#bt2").removeAttr("disabled");
+        $("#btc").hide();
+    };
+    function gofight(tree){
         window.cancelRun = false;
         $("#btE").attr("disabled", true);
         $("#btA").attr("disabled", true);
@@ -204,14 +230,9 @@
             var ret = $(elemnt).data().getCard();
             if (ret) r.push(ret);
         });
-        var restore=function(){
-            $("#btE").removeAttr("disabled");
-            $("#btA").removeAttr("disabled");
-            $("#bt2").removeAttr("disabled");
-            $("#btc").hide();
-        };
-        if(once) run(l,r,restore);
-        else analyse(l,r,restore);
+        log.empty();
+        if(!tree) run(l,r,restore,log);
+        else analyse(l,r,restore,log);
     }
     function swapDeck(){
         var left = $("#leftdeck>li");
@@ -219,6 +240,8 @@
         $("#leftdeck").append(right);
         $("#rightdeck").append(left);
     }
+
+
 </script>
 </body>
 </html>
