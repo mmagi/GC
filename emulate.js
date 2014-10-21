@@ -144,7 +144,6 @@ var ABI = (function () {
         6: elementAtk,
         7: {//不死
             __proto__: elementAtk,
-            isDamageAtk:false,
             getOtherCase: function (from, to) {
                 var rate = to.elementAtkRate(this.element);
                 var n = parseInt(
