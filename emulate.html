@@ -189,7 +189,7 @@
         $type.multiselect('dataprovider',types);
         $type.multiselect("select",7);
         var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
-        $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效",disableIfEmpty: true});
+        $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效"});
         $body.data({getCard:function(){
             var data=_db.cardStatus[$card.val()];
             var tdata=_db.type[$type.val()];
