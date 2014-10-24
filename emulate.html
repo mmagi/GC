@@ -314,7 +314,7 @@
         });
         if (l.length<20) return alert("请完全部十张卡牌及技能的选择后再生成");
         $("#QQCode").val(qq+"|"+CryptoJS.TripleDES.encrypt(CryptoJS.lib.WordArray.create(l), qq).toString());
-        if (l.length<20) return alert("报名码已生成，请复制并发送给活动组织者以完成报名，注意确认出战卡组是否符合活动规则");
+        return alert("报名码已生成，请复制并发送给活动组织者以完成报名，注意确认出战卡组是否符合活动规则");
     }
     function rm(){
         var data = $("#QQCode").val().split("|");
