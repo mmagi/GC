@@ -5,12 +5,13 @@
     <title>抖M魔物战斗模拟器</title>
     <script type="text/javascript" src="db.js"></script>
     <!-- Latest compiled and minified CSS -->
+    <script src="encode.js"></script>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 
-    <script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
+    <script src="share/jquery-2.1.0.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="//johnny.github.io/jquery-sortable/js/jquery-sortable-min.js"></script>
+    <script src="share/bootstrap.min.js"></script>
+    <script src="share/jquery-sortable-min.js"></script>
     <script src="multiselect.js?2"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/dist/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
@@ -55,7 +56,7 @@
     </style>
 </head>
 <body>
-<h3 style="text-align: center">抖M魔物模拟器测试版v20141015</h3>
+<h3 style="text-align: center">抖M魔物模拟器二区活动版v20141015 <a href="?all" id="showall">目前仅显示活动卡，点此切换显示所有卡牌</a></h3>
 <ol id="leftdeck"  class="deck" style="float:left;"></ol>
 <ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
@@ -66,7 +67,14 @@
         <button  id="btc" class="btn" onclick="window.cancelRun = true"><span class="glyphicon glyphicon-stop"></span> 停止</button>
     </div>
 </div>
-
+<form role="form">
+    <div class="form-group">
+        <label for="QQCode" >请在下方空格内输入报名QQ号，并在左方配置参战十张卡牌，然后生成报名码并发送给活动组织人员</label>
+        <input class="form-control" spellcheck='false' id="QQCode" placeholder="请输入报名QQ号" onclick="this.select();"/>
+    </div>
+    <button type="button" onclick="gm()" class="btn btn-default">生成报名码</button>
+    <button type="button" onclick="rm()" class="btn btn-default">读取报名码</button>
+</form>
 <div id="chartContainer" style="height: 300px; width: 100%;">
 </div>
 <ul id="logContainer">
@@ -120,11 +128,33 @@
         ]
     });
 
-
+    var Q2actCard = {
+        40259:1,
+        40274:1,
+        40168:1,
+        40174:1,
+        40262:1,
+        40264:1,
+        40263:1,
+        40265:1,
+        40206:1,
+        40207:1,
+        40588:1,
+        40600:1,
+        40602:1
+    };
     chart.render();
     var cards=[{label:"无",value:0}];
-    for (var idx in _db.cardStatus){
-        if (idx<100000 && _db.cardStatus[idx][7]>0) cards.push({label:_db.cardStatus[idx][0],value:idx});
+    if (window.location.search.indexOf("all")>-1){
+        $("#showall").hide();
+        for (var idx in _db.cardStatus){
+            if (idx<100000 && _db.cardStatus[idx][7]>0) cards.push({label:_db.cardStatus[idx][0],value:idx});
+        }
+    }
+    else{
+        for (var idx in Q2actCard){
+            if (idx<100000 && _db.cardStatus[idx][7]>0) cards.push({label:_db.cardStatus[idx][0],value:idx});
+        }
     }
     var types=[];
     for (var idx in _db.type){
@@ -157,7 +187,7 @@
         });
         var $type = $("<select>").appendTo($body);
         $type.multiselect('dataprovider',types);
-        $type.val("7");
+        $type.multiselect("select",7);
         var $abi = $("<select>",{multiple:"multiple"}).appendTo($body);
         $abi.multiselect({nonSelectedText:"未选择技能",nSelectedText:"个技能同时生效",disableIfEmpty: true});
         $body.data({getCard:function(){
@@ -175,7 +205,40 @@
                 itl:  caculate(data[13],data[19],tdata[6],data[5],data[7]),
                 abi:$abi.val()
             };
-        }});
+        },setCard:function(cid,type,ab1,ab2,ab3){
+            $card.multiselect('select', cid);
+            $type.multiselect('select',type);
+            var data=_db.cardStatus[$card.val()];
+            var abi=[];
+            if (!!data){
+                if (data[20]) abi.push({label:_db.skill[data[21]][0],detail:_db.skill[data[21]][1],value:data[21]});
+                if (data[22]) abi.push({label:_db.skill[data[23]][0],detail:_db.skill[data[23]][1],value:data[23]});
+                if (data[24]) abi.push({label:_db.skill[data[25]][0],detail:_db.skill[data[25]][1],value:data[25]});
+                if (data[26]) abi.push({label:_db.skill[data[27]][0],detail:_db.skill[data[27]][1],value:data[27]});
+                if (data[28]) abi.push({label:_db.skill[data[29]][0],detail:_db.skill[data[29]][1],value:data[29]});
+                if (data[30]) abi.push({label:_db.skill[data[31]][0],detail:_db.skill[data[31]][1],value:data[31]});
+            }
+            $abi.multiselect('dataprovider',abi);
+            $abi.multiselect('select',[ab1,ab2,ab3]);
+        },c:function(){
+            try {
+                var cid = parseInt($card.val());
+                var t = parseInt($type.val());
+                var ab = $abi.val();
+                if (ab.length<3) return null;
+                var ab0 = parseInt(ab[0]);
+                var ab1 = parseInt(ab[1]);
+                var ab2 = parseInt(ab[2]);
+                var out1 = (cid << 14) + ab0;
+                var out2 = (ab1 << 18) + (ab2 << 4) + t;
+                return [out1,out2];
+            }catch (e){
+                return null;
+            }
+        },d:function(in1,in2){
+            this.setCard(in1>>14,in2&0xF,in1&0x3FFF,in2>>18,(in2>>4)&0x3FFF);
+        }
+        });
     }
     $("#btc").hide();
     var p = $("#leftdeck");
@@ -240,8 +303,28 @@
         $("#leftdeck").append(right);
         $("#rightdeck").append(left);
     }
-
-
+    function gm(){
+        var qq = $("#QQCode").val().split("|")[0];
+        if(!qq) return alert("请输入QQ号");
+        var l = [];
+        $("#leftdeck>li").each(function(idx,elemnt){
+            var ret = $(elemnt).data().c();
+            if (ret) {l.push(ret[0]);l.push(ret[1]);}
+            else return false;
+        });
+        if (l.length<20) return alert("请完全部十张卡牌及技能的选择后再生成");
+        $("#QQCode").val(qq+"|"+CryptoJS.TripleDES.encrypt(CryptoJS.lib.WordArray.create(l), qq).toString());
+        if (l.length<20) return alert("报名码已生成，请复制并发送给活动组织者以完成报名，注意确认出战卡组是否符合活动规则");
+    }
+    function rm(){
+        var data = $("#QQCode").val().split("|");
+        var l = CryptoJS.TripleDES.decrypt(data[1], data[0]).words;
+        $("#leftdeck>li").each(function(idx,elemnt){
+            var in1= l.shift();
+            var in2= l.shift()
+            var ret = $(elemnt).data().d(in1,in2);
+        });
+    }
 </script>
 </body>
 </html>
