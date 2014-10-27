@@ -15,7 +15,7 @@
     <script src="multiselect.js?2"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/dist/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141015"></script>
+    <script type="text/javascript" src="emulate.js?20141027"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -56,7 +56,10 @@
     </style>
 </head>
 <body>
-<h3 style="text-align: center">抖M魔物模拟器二区活动版v20141015 <a href="?all" id="showall">目前仅显示活动卡，点此切换显示所有卡牌</a></h3>
+<h3 style="text-align: center">抖M魔物模拟器v20141027</h3>
+<ul>
+    <li>变更内容：更改了血斩的判定规则(对hp仅剩1点的敌人血斩预判得分记0分,其他残血状态血斩预判得分为1分)<li>
+</ul>
 <ol id="leftdeck"  class="deck" style="float:left;"></ol>
 <ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
@@ -129,24 +132,10 @@
     });
 
     var Q2actCard = {
-        40259:1,
-        40274:1,
-        40168:1,
-        40174:1,
-        40262:1,
-        40264:1,
-        40263:1,
-        40265:1,
-        40206:1,
-        40207:1,
-        40588:1,
-        40600:1,
-        40602:1
     };
     chart.render();
     var cards=[{label:"无",value:0}];
-    if (window.location.search.indexOf("all")>-1){
-        $("#showall").hide();
+    if (true || window.location.search.indexOf("all")>-1){
         for (var idx in _db.cardStatus){
             if (idx<100000 && _db.cardStatus[idx][7]>0) cards.push({label:_db.cardStatus[idx][0],value:idx});
         }

@@ -144,6 +144,7 @@ var ABI = (function () {
         6: elementAtk,
         7: {//不死
             __proto__: elementAtk,
+            isDamageAtk:false,
             getOtherCase: function (from, to) {
                 var rate = to.elementAtkRate(this.element);
                 var n = parseInt(
@@ -466,15 +467,16 @@ var ABI = (function () {
                 return  null;
             },
             score: function (from, to) {
+                if (from._hp < this.power2 || to._hp <= 1) {
+                    return 0;
+                }
                 var n = parseInt(
                         from.atk * (from.perAtk + this.power) / 100 - to.def * (100 + to.perDef) / 200
                 );
                 if (n < 1) n = 1;
                 if (n > to._hp) n = to._hp;
                 var rank = n - this.power2;
-                if (from._hp < this.power2) {
-                    return 0;
-                } else if (rank < 1) rank = 1;
+                if (rank < 1) rank = 1;
                 return rank;
             },
             isPhysicAtk: false
