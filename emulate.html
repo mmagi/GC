@@ -15,7 +15,7 @@
     <script src="multiselect.js?2"></script>
     <link rel="stylesheet" href="//davidstutz.github.io/bootstrap-multiselect/dist/css/bootstrap-multiselect.css">
     <script type="text/javascript" src="canvasjs.min.js"></script>
-    <script type="text/javascript" src="emulate.js?20141027"></script>
+    <script type="text/javascript" src="emulate.js?20150117"></script>
     <style>
         li.log{
             list-style-type: none;
@@ -56,10 +56,18 @@
     </style>
 </head>
 <body>
-<h3 style="text-align: center">抖M魔物模拟器v20141027</h3>
+<h3 style="text-align: center">抖M魔物模拟器v20150117</h3>
 <ul>
-    <li>变更内容：更改了血斩的判定规则(对hp仅剩1点的敌人血斩预判得分记0分,其他残血状态血斩预判得分为1分)</li>
+    <li>变更内容：更正了回血/蓝类技能判定代码的大bug</li>
 </ul>
+<form role="form">
+    <div class="form-group">
+        <label for="QQCode" >请在下方空格内输入报名QQ号，并在左方配置参战十张卡牌，然后生成报名码并发送给活动组织人员</label>
+        <input class="form-control" spellcheck='false' id="QQCode" placeholder="请输入报名QQ号" onclick="this.select();"/>
+    </div>
+    <button type="button" onclick="gm()" class="btn btn-default">生成报名码</button>
+    <button type="button" onclick="rm()" class="btn btn-default">读取报名码</button>
+</form>
 <ol id="leftdeck"  class="deck" style="float:left;"></ol>
 <ol id="rightdeck"  class="deck" style="float:right;"></ol>
 <div style="clear: both;width: 100%;text-align: center;">
@@ -70,14 +78,7 @@
         <button  id="btc" class="btn" onclick="window.cancelRun = true"><span class="glyphicon glyphicon-stop"></span> 停止</button>
     </div>
 </div>
-<form role="form">
-    <div class="form-group">
-        <label for="QQCode" >请在下方空格内输入报名QQ号，并在左方配置参战十张卡牌，然后生成报名码并发送给活动组织人员</label>
-        <input class="form-control" spellcheck='false' id="QQCode" placeholder="请输入报名QQ号" onclick="this.select();"/>
-    </div>
-    <button type="button" onclick="gm()" class="btn btn-default">生成报名码</button>
-    <button type="button" onclick="rm()" class="btn btn-default">读取报名码</button>
-</form>
+
 <div id="chartContainer" style="height: 300px; width: 100%;">
 </div>
 <ul id="logContainer">

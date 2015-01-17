@@ -187,11 +187,12 @@ var ABI = (function () {
             isNormalAbi: true,
             score: function (from, to) {
                 var n = parseInt(from.maxHp * this.power / 100);
-                if (from.maxHp - from._hp > n) n = from.maxHp - from._hp;
+                if (from.maxHp - from._hp < n) n = from.maxHp - from._hp;
                 return n;
             },
             apply: function (log, from, to, ref) {
                 var n = parseInt(from.maxHp * this.power / 100);
+                if (from.maxHp - from._hp < n) n = from.maxHp - from._hp;
                 from.setHp(from._hp + n);
                 if (log) log.log(this.name + "使" + from.name + "恢复了" + n + "HP，当前剩余" + from._hp + "HP");
                 return  null;
@@ -239,7 +240,7 @@ var ABI = (function () {
                 if (n < 1) n = 1;
                 if (n > to._hp) n = to._hp;
                 var n2 = parseInt(n * this.power2 / 100);
-                if (from.maxHp - from._hp > n2) n2 = from.maxHp - from._hp;
+                if (from.maxHp - from._hp < n2) n2 = from.maxHp - from._hp;
                 return n + n2;
             },
             isHeal: true
@@ -266,7 +267,7 @@ var ABI = (function () {
                 if (n < 1) n = 1;
                 if (n > to._mp) n = to._mp;
                 var n2 = parseInt(n * this.power2 / 100);
-                if (from.maxMp - from._mp > n2) n2 = from.maxMp - from._mp;
+                if (from.maxMp - from._mp < n2) n2 = from.maxMp - from._mp;
                 return n + n2;
             },
             isHeal: true
